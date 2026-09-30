@@ -1,0 +1,18 @@
+CLIENTPRO V12.4
+
+CORREZIONI PRINCIPALI
+- Corretto l'avvio dell'intervista sui clienti creati dall'utente.
+- L'intervista ora viene sempre inizializzata correttamente anche dopo sincronizzazione cloud.
+- Corretto anche l'avvio rapido dell'intervista dalla dashboard.
+- Aggiunti controlli per vecchi dati/interviste incomplete.
+- Mantenuta la funzione Elimina cliente introdotta nella V12.3.
+- Rimossa definitivamente la creazione automatica dei clienti demo.
+- Migliorato il Service Worker: le app già installate ricevono più rapidamente gli aggiornamenti.
+
+NON SERVE:
+- rifare Supabase
+- creare un nuovo account
+- reinstallare l'app
+- perdere i clienti o i questionari esistenti
+
+L'aggiornamento va pubblicato sullo stesso progetto Vercel.
