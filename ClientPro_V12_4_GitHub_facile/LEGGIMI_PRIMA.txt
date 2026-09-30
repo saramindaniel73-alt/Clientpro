@@ -1,0 +1,14 @@
+CLIENTPRO V12.4 — PACCHETTO GITHUB FACILE
+
+Carica TUTTI questi file direttamente nella root del repository GitHub Clientpro.
+Non creare sottocartelle e non caricare lo ZIP.
+
+File necessari:
+- index.html
+- config.js
+- manifest.webmanifest
+- sw.js
+- vercel.json
+- icon-192.png
+- icon-512.png
+- icon-maskable-512.png
