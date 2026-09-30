@@ -16,3 +16,4 @@ NON SERVE:
 - perdere i clienti o i questionari esistenti
 
 L'aggiornamento va pubblicato sullo stesso progetto Vercel.
+Aggiornamento
