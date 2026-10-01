@@ -571,6 +571,32 @@ dialog::backdrop{background:rgba(0,0,0,.72);backdrop-filter:blur(4px)}
   .mobileBrand{margin-bottom:8px !important}
 }
 </style>
+
+<style id="v127-archive-history">
+.clientListTabs{display:flex;gap:8px;margin:0 0 12px;flex-wrap:wrap}
+.clientListTabs button.on{background:linear-gradient(135deg,var(--blue),var(--blue2));border-color:transparent;color:#fff}
+.addressLine{display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap;margin-top:7px;color:var(--muted)}
+.addressLine a{color:#79baff;text-decoration:none;font-weight:800}
+.addressLine a:hover{text-decoration:underline}
+.archiveBadge{color:#a9b7c6;background:rgba(142,163,187,.1)}
+.projectCard{cursor:pointer}
+.projectCard:hover{border-color:#3576b7}
+.projectMeta{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}
+.summaryGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin:10px 0}
+.summaryBox{padding:11px;border:1px solid var(--line);border-radius:11px;background:var(--panel2)}
+.summaryBox small{display:block;color:var(--muted);font-weight:700;margin-bottom:5px}
+.summaryBox b{font-size:16px}
+.closureCard{border-left:4px solid var(--green)}
+.historyProject{border-left:4px solid var(--blue)}
+.dangerBtn{border-color:rgba(255,99,117,.35)!important;color:#ff8f9c!important}
+.softActions{display:flex;gap:8px;flex-wrap:wrap}
+.moneyGood{color:var(--green);font-weight:850}
+@media(max-width:760px){
+ .summaryGrid{grid-template-columns:1fr 1fr}
+ .softActions{display:grid;grid-template-columns:1fr}
+}
+@media(max-width:460px){.summaryGrid{grid-template-columns:1fr}}
+</style>
 <style id="v126-time-tracking">
 .timeSummary{display:grid;grid-template-columns:minmax(190px,.8fr) 1.2fr;gap:12px;margin-bottom:12px}
 .timeTotal{font-size:30px;font-weight:900;margin:5px 0}.timeValue{color:var(--green);font-weight:850}
@@ -578,6 +604,7 @@ dialog::backdrop{background:rgba(0,0,0,.72);backdrop-filter:blur(4px)}
 .timeBreakdown .item{margin:0;padding:10px 12px}.rateRow{display:flex;align-items:center;gap:8px;margin-top:10px}.rateRow input{max-width:120px}
 @media(max-width:700px){.timeSummary{grid-template-columns:1fr}.timeBreakdown{grid-template-columns:1fr}.timeTotal{font-size:27px}}
 </style>
+
 </head><body>
 <div class="app">
 <aside class="side"><div class="brand click" onclick="go('home')"><div class="mark">CP</div>ClientPro</div><div class="miniLabel">AREA DI LAVORO</div><div class="nav">
@@ -586,7 +613,7 @@ dialog::backdrop{background:rgba(0,0,0,.72);backdrop-filter:blur(4px)}
 <main class="main"><div class="mobileBrand click" onclick="go('home')"><div class="mark">CP</div><b>ClientPro</b></div>
 <div class="top"><div><small id="crumb" class="mut">ClientPro</small><h1 id="title">Dashboard</h1></div><input class="topSearch" placeholder="Cerca clienti, progetti, attività..."><div class="actions">
 <button id="installBtn" class="installBtn" title="Installa ClientPro" onclick="installApp()">↓ <span class="accountText">Installa</span></button>
-<span class="betaBadge" title="Versione installata">v12.6</span>
+<span class="betaBadge" title="Versione installata">v12.7</span>
 <button class="accountBtn" title="Account e impostazioni" onclick="openAccountSettings()"><span class="avatar" id="accountAvatar">CP</span><span class="accountText" id="accountLabel">Account</span></button>
 <button class="primary" onclick="newClient()">＋ Nuovo cliente</button>
 </div></div><div id="offlineBanner" class="offlineBanner"></div><div id="view"></div></main>
@@ -609,7 +636,7 @@ let deferredInstallPrompt=null;
 let activeView='section';
 let lastSyncAt=null;
 let localDirty=false;
-const APP_VERSION='12.6';
+const APP_VERSION='12.7';
 
 function syncTimeText(){
   return lastSyncAt ? 'Ultima sincronizzazione: '+lastSyncAt.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'}) : 'Sincronizzazione non ancora completata';
@@ -687,16 +714,20 @@ async function loadCloudState(force=false){
     const localTheme=db.theme;
     db=row.payload;
     if(!db.theme)db.theme=localTheme||'dark';
+    const beforeMigration=JSON.stringify(db);
+    ensureAllData();
+    const dataMigrated=beforeMigration!==JSON.stringify(db);
     pendingTimeMerged=mergePendingTimeEntries();
     localStorage.setItem(STORE,JSON.stringify(db));
     suppressCloudSave=false;
-    localDirty=pendingTimeMerged>0;
+    localDirty=pendingTimeMerged>0||dataMigrated;
   }else{
+    ensureAllData();
     await saveCloudState(true);
   }
   lastSyncAt=new Date();
   setSyncState('ok');
-  if(pendingTimeMerged)await saveCloudState(true);
+  if(pendingTimeMerged||localDirty)await saveCloudState(true);
   return true;
 }
 function scheduleCloudSave(){
@@ -831,38 +862,139 @@ let cur=null,tab='overview';
 const save=()=>{localDirty=true;localStorage.setItem(STORE,JSON.stringify(db));scheduleCloudSave()};
 const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
 
-// V12.6 - conteggio automatico del tempo per cliente.
+
+// V12.7 - dati compatibili con V12.6 + archivio/storico lavori.
 const TIME_SESSION_KEY='clientpro_active_time_v126';
 const PENDING_TIME_KEY='clientpro_pending_time_v126';
 const IDLE_LIMIT_MS=5*60*1000;
 const TIME_CATEGORIES=['Intervista','Analisi','Problemi','Progetti','Attività'];
 let activeTimeSession=null;
 let idleTimer=null;
-function ensureTimeData(){if(!Array.isArray(db.timeEntries))db.timeEntries=[];db.clients.forEach(c=>{if(c.hourlyRate==null)c.hourlyRate=''})}
+let activeProjectId='';
+let clientListMode='active';
+
+function ensureClientData(c){
+  if(!c)return c;
+  if(!Array.isArray(c.problems))c.problems=[];
+  if(!Array.isArray(c.projects))c.projects=[];
+  if(c.archived==null)c.archived=false;
+  if(!c.address||typeof c.address!=='object')c.address={};
+  ['street','zip','city','province','operational','mapsUrl'].forEach(k=>{if(c.address[k]==null)c.address[k]=''});
+  if(c.hourlyRate==null)c.hourlyRate='';
+  c.projects.forEach(p=>ensureProjectData(p,c));
+  return c;
+}
+function ensureProjectData(p,c){
+  if(!p)return p;
+  if(!p.id)p.id=crypto.randomUUID();
+  if(!p.startedAt)p.startedAt=new Date().toISOString();
+  if(!Array.isArray(p.closures))p.closures=[];
+  if(!p.relationType)p.relationType='new';
+  if(p.parentProjectId==null)p.parentProjectId='';
+  return p;
+}
+function ensureAllData(){
+  if(!Array.isArray(db.clients))db.clients=[];
+  if(!Array.isArray(db.tasks))db.tasks=[];
+  if(!Array.isArray(db.history))db.history=[];
+  if(!Array.isArray(db.timeEntries))db.timeEntries=[];
+  db.clients.forEach(ensureClientData);
+  db.tasks.forEach(t=>{if(!t.id)t.id=crypto.randomUUID();if(t.projectId==null)t.projectId=''});
+}
+function ensureTimeData(){ensureAllData()}
 function pendingTimeEntries(){try{const value=JSON.parse(localStorage.getItem(PENDING_TIME_KEY)||'[]');return Array.isArray(value)?value:[]}catch(e){return []}}
 function queuePendingTime(entry){const pending=pendingTimeEntries();if(!pending.some(e=>e.id===entry.id))pending.push(entry);localStorage.setItem(PENDING_TIME_KEY,JSON.stringify(pending))}
 function mergePendingTimeEntries(){ensureTimeData();const pending=pendingTimeEntries(),known=new Set(db.timeEntries.map(e=>e.id));let added=0;pending.forEach(entry=>{if(entry?.id&&!known.has(entry.id)){db.timeEntries.push(entry);known.add(entry.id);added++}});return added}
 function clearSyncedPendingTime(payload){const synced=new Set((payload?.timeEntries||[]).map(e=>e.id));const remaining=pendingTimeEntries().filter(e=>!synced.has(e.id));if(remaining.length)localStorage.setItem(PENDING_TIME_KEY,JSON.stringify(remaining));else localStorage.removeItem(PENDING_TIME_KEY)}
-function trackingContext(){if(!cur?.id)return null;if(activeView==='interview')return {clientId:cur.id,category:'Intervista'};if(activeView!=='client')return null;const map={analysis:'Analisi',problems:'Problemi',projects:'Progetti',tasks:'Attività'};return map[tab]?{clientId:cur.id,category:map[tab]}:null}
+function openProjectsFor(c){ensureClientData(c);return c.projects.filter(p=>p.status!=='Completato')}
+function inferredProjectId(c,category){
+  if(activeProjectId&&c.projects.some(p=>p.id===activeProjectId))return activeProjectId;
+  if(category==='Progetti'||category==='Attività'){
+    const open=openProjectsFor(c);
+    if(open.length===1)return open[0].id;
+  }
+  return '';
+}
+function trackingContext(){
+  if(!cur?.id||cur.archived)return null;
+  if(activeView==='interview')return {clientId:cur.id,category:'Intervista',projectId:''};
+  if(activeView!=='client')return null;
+  const map={analysis:'Analisi',problems:'Problemi',projects:'Progetti',tasks:'Attività'};
+  const category=map[tab];
+  return category?{clientId:cur.id,category,projectId:inferredProjectId(cur,category)}:null;
+}
 function persistActiveTime(){try{activeTimeSession?localStorage.setItem(TIME_SESSION_KEY,JSON.stringify(activeTimeSession)):localStorage.removeItem(TIME_SESSION_KEY)}catch(e){}}
-function startTimeSession(context,startedAt=Date.now()){if(!context||document.visibilityState==='hidden')return;activeTimeSession={id:crypto.randomUUID(),clientId:context.clientId,category:context.category,startedAt,lastActivityAt:startedAt};persistActiveTime();resetIdleTimer()}
+function startTimeSession(context,startedAt=Date.now()){
+  if(!context||document.visibilityState==='hidden')return;
+  activeTimeSession={id:crypto.randomUUID(),clientId:context.clientId,category:context.category,projectId:context.projectId||'',startedAt,lastActivityAt:startedAt};
+  persistActiveTime();resetIdleTimer();
+}
 function closeTimeSession(reason='context',endedAt=Date.now()){
   if(!activeTimeSession)return;
   const s=activeTimeSession;activeTimeSession=null;clearTimeout(idleTimer);idleTimer=null;
   const end=Math.max(s.startedAt,Math.min(endedAt,Date.now())),durationMs=Math.max(0,end-s.startedAt);
-  if(durationMs>=1000){ensureTimeData();const entry={id:s.id,clientId:s.clientId,category:s.category,startedAt:new Date(s.startedAt).toISOString(),endedAt:new Date(end).toISOString(),durationMs,closeReason:reason};db.timeEntries.push(entry);queuePendingTime(entry);save()}
+  if(durationMs>=1000){
+    ensureTimeData();
+    const entry={id:s.id,clientId:s.clientId,category:s.category,projectId:s.projectId||'',startedAt:new Date(s.startedAt).toISOString(),endedAt:new Date(end).toISOString(),durationMs,closeReason:reason};
+    db.timeEntries.push(entry);queuePendingTime(entry);save();
+  }
   persistActiveTime();
 }
-function syncTimeContext(){const context=trackingContext();if(!context){closeTimeSession('uscita-contesto');return}if(activeTimeSession&&(activeTimeSession.clientId!==context.clientId||activeTimeSession.category!==context.category))closeTimeSession('cambio-contesto');if(!activeTimeSession&&document.visibilityState!=='hidden')startTimeSession(context)}
+function syncTimeContext(){
+  const context=trackingContext();
+  if(!context){closeTimeSession('uscita-contesto');return}
+  if(activeTimeSession&&(activeTimeSession.clientId!==context.clientId||activeTimeSession.category!==context.category||(activeTimeSession.projectId||'')!==(context.projectId||'')))closeTimeSession('cambio-contesto');
+  if(!activeTimeSession&&document.visibilityState!=='hidden')startTimeSession(context);
+}
 function resetIdleTimer(){clearTimeout(idleTimer);if(!activeTimeSession)return;const remaining=Math.max(0,activeTimeSession.lastActivityAt+IDLE_LIMIT_MS-Date.now());idleTimer=setTimeout(()=>{if(activeTimeSession)closeTimeSession('inattività',activeTimeSession.lastActivityAt+IDLE_LIMIT_MS)},remaining)}
-function noteUserActivity(){const context=trackingContext();if(!context||document.visibilityState==='hidden')return;if(!activeTimeSession)startTimeSession(context);else{if(activeTimeSession.clientId!==context.clientId||activeTimeSession.category!==context.category){syncTimeContext();return}activeTimeSession.lastActivityAt=Date.now();persistActiveTime();resetIdleTimer()}}
+function noteUserActivity(){const context=trackingContext();if(!context||document.visibilityState==='hidden')return;if(!activeTimeSession)startTimeSession(context);else{if(activeTimeSession.clientId!==context.clientId||activeTimeSession.category!==context.category||(activeTimeSession.projectId||'')!==(context.projectId||'')){syncTimeContext();return}activeTimeSession.lastActivityAt=Date.now();persistActiveTime();resetIdleTimer()}}
 function recoverTimeSession(){let previous=null;try{previous=JSON.parse(localStorage.getItem(TIME_SESSION_KEY)||'null')}catch(e){}if(!previous?.clientId||!previous?.startedAt)return;activeTimeSession=previous;closeTimeSession('ripristino',Math.min(Date.now(),Number(previous.lastActivityAt||previous.startedAt)+IDLE_LIMIT_MS))}
 function timeEntriesFor(clientId){ensureTimeData();return db.timeEntries.filter(e=>e.clientId===clientId)}
-function timeMsFor(clientId,category=''){let total=timeEntriesFor(clientId).filter(e=>!category||e.category===category).reduce((sum,e)=>sum+Math.max(0,Number(e.durationMs)||0),0);if(activeTimeSession?.clientId===clientId&&(!category||activeTimeSession.category===category))total+=Math.max(0,Date.now()-activeTimeSession.startedAt);return total}
+function timeMsFor(clientId,category='',projectId=null){
+  let total=timeEntriesFor(clientId).filter(e=>(!category||e.category===category)&&(projectId===null||(e.projectId||'')===projectId)).reduce((sum,e)=>sum+Math.max(0,Number(e.durationMs)||0),0);
+  if(activeTimeSession?.clientId===clientId&&(!category||activeTimeSession.category===category)&&(projectId===null||(activeTimeSession.projectId||'')===projectId))total+=Math.max(0,Date.now()-activeTimeSession.startedAt);
+  return total;
+}
 function formatDuration(ms){const minutes=Math.floor(Math.max(0,ms)/60000),hours=Math.floor(minutes/60),mins=minutes%60;if(!hours)return `${mins} min`;return `${hours} h${mins?' '+String(mins).padStart(2,'0')+' min':''}`}
-function moneyValue(c){const rate=Number(c.hourlyRate)||0;return rate?new Intl.NumberFormat('it-IT',{style:'currency',currency:'EUR'}).format(timeMsFor(c.id)/3600000*rate):'—'}
+function moneyFmt(v){return new Intl.NumberFormat('it-IT',{style:'currency',currency:'EUR'}).format(Number(v)||0)}
+function moneyValue(c){const rate=Number(c.hourlyRate)||0;return rate?moneyFmt(timeMsFor(c.id)/3600000*rate):'—'}
 function timeSummaryHTML(c){const total=timeMsFor(c.id);return `<div class="timeSummary"><div class=card><h3>Tempo di lavoro</h3><div class=timeTotal>${formatDuration(total)}</div><div class=mut>Conteggio automatico nelle aree di lavoro del cliente.</div><div class=rateRow><label for=hourlyRate>Tariffa €/ora</label><input id=hourlyRate type=number min=0 step=0.5 inputmode=decimal value="${esc(c.hourlyRate??'')}" onchange="setHourlyRate(this.value)"></div><p>Valore stimato: <span class=timeValue>${moneyValue(c)}</span></p></div><div class=card><h3>Suddivisione per categoria</h3><div class=timeBreakdown>${TIME_CATEGORIES.map(category=>`<div class=item><div class="row between"><span>${category}</span><b>${formatDuration(timeMsFor(c.id,category))}</b></div></div>`).join('')}</div></div></div>`}
 function setHourlyRate(value){if(!cur)return;cur.hourlyRate=value===''?'':Math.max(0,Number(value)||0);save();renderClient()}
+
+function addressText(c){
+  ensureClientData(c);
+  return [c.address.street,[c.address.zip,c.address.city].filter(Boolean).join(' '),c.address.province].filter(Boolean).join(', ');
+}
+function mapsHref(c){
+  const a=addressText(c);
+  return c.address?.mapsUrl|| (a?'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(a):'');
+}
+function projectById(c,id){return (c?.projects||[]).find(p=>p.id===id)||null}
+function projectLabel(p){if(!p)return '';if(p.relationType==='assistance')return 'Assistenza / modifica';if(p.relationType==='resume')return 'Ripreso';return 'Nuovo progetto'}
+function projectTimeMs(c,p){
+  ensureProjectData(p,c);
+  const closures=p.closures||[],last=closures.length?latestClosure(p):null,lastClose=last?Date.parse(last.closedAt||''):0;
+  const entries=timeEntriesFor(c.id).filter(e=>!lastClose||Date.parse(e.startedAt||'')>lastClose);
+  if((c.projects||[]).length===1){
+    let total=entries.reduce((s,e)=>s+(Number(e.durationMs)||0),0);
+    if(activeTimeSession?.clientId===c.id&&(!lastClose||activeTimeSession.startedAt>lastClose))total+=Math.max(0,Date.now()-activeTimeSession.startedAt);
+    return total;
+  }
+  let total=entries.filter(e=>(e.projectId||'')===p.id).reduce((s,e)=>s+(Number(e.durationMs)||0),0);
+  if(activeTimeSession?.clientId===c.id&&(activeTimeSession.projectId||'')===p.id&&(!lastClose||activeTimeSession.startedAt>lastClose))total+=Math.max(0,Date.now()-activeTimeSession.startedAt);
+  return total;
+}
+function latestClosure(p){return (p.closures||[]).slice().sort((a,b)=>new Date(b.closedAt)-new Date(a.closedAt))[0]||null}
+function closureSummaryHTML(c,p,s){
+  return `<div class="item closureCard"><div class="row between"><div><b>${esc(p.name)}</b><div class=mut>${fmt(s.startedAt)} → ${fmt(s.closedAt)}</div></div><span class="pill green">Concluso</span></div><div class=summaryGrid><div class=summaryBox><small>Tempo</small><b>${formatDuration(s.durationMs||0)}</b></div><div class=summaryBox><small>Tariffa</small><b>${moneyFmt(s.hourlyRate||0)}/h</b></div><div class=summaryBox><small>Valore lavoro</small><b>${moneyFmt(s.estimatedValue||0)}</b></div><div class=summaryBox><small>Incassato</small><b>${moneyFmt(s.collectedAmount||0)}</b></div></div>${s.agreedAmount!==''&&s.agreedAmount!=null?`<div class=mut>Importo concordato: <b>${moneyFmt(s.agreedAmount)}</b></div>`:''}${s.result?`<p><b>Risultato:</b> ${esc(s.result)}</p>`:''}</div>`;
+}
+function clientHistoryHTML(c){
+  ensureClientData(c);
+  const closures=(c.projects||[]).flatMap(p=>(p.closures||[]).map(s=>({p,s}))).sort((a,b)=>new Date(b.s.closedAt)-new Date(a.s.closedAt));
+  const events=db.history.filter(h=>h.clientId===c.id);
+  return `<div class=card><div class="row between"><h3>Consuntivi lavori</h3><span class=pill>${closures.length}</span></div>${closures.length?closures.map(x=>closureSummaryHTML(c,x.p,x.s)).join(''):'<div class=mut>Nessun lavoro concluso.</div>'}</div>
+  <div class=card><div class="row between"><h3>Storico completo</h3><span class=pill>${events.length}</span></div>${events.length?events.map(h=>{const p=h.projectId?projectById(c,h.projectId):null;return `<div class="item ${p?'historyProject':''}"><b>${esc(h.text)}</b>${p?`<div class=mut>Progetto: ${esc(p.name)}</div>`:''}<div class=mut>${fmt(h.date)}</div></div>`}).join(''):'<div class=mut>Nessun evento.</div>'}</div>`;
+}
 
 
 function dashboardGo(page){
@@ -900,7 +1032,7 @@ function pushRoute(route, replace=false){
 }
 
 function renderSection(p){
-  closeTimeSession('uscita-cliente');
+  closeTimeSession('uscita-cliente');activeProjectId='';
   activeView='section';
   cur=null;
   activate(p);
@@ -917,7 +1049,7 @@ function restoreRoute(route){
   if(route.view==='client'){openClient(route.clientId,route.tab||'overview',false);return}
   if(route.view==='interview'){
     const c=db.clients.find(x=>x.id===route.clientId);
-    if(c){activeView='interview';cur=c;tab='interview';activate('');ensureInterview(cur);renderInterview();window.scrollTo(0,0)}
+    if(c){activeView='interview';cur=c;tab='interview';activate('');ensureClientData(cur);ensureInterview(cur);renderInterview();syncTimeContext();window.scrollTo(0,0)}
     else renderSection('clients');
     return;
   }
@@ -1017,7 +1149,7 @@ async function openAccountSettings(){
   show(`<div class="modalHead"><h2>Account e impostazioni</h2><button class="modalClose" onclick="modal.close()" aria-label="Chiudi">×</button></div>
     <div class="settingsGrid">
       <div class="settingBox"><h3>Account</h3><p>${cloud?(authUser?.email||'Cloud configurato'):'ClientPro è in modalità locale.'}</p>${cloud&&authUser?'<button onclick="doLogout()">Esci dall’account</button>':'<span class="cloudLocal">Cloud non configurato</span>'}</div>
-      <div class="settingBox"><h3>Sincronizzazione</h3><p>${cloud?'Clienti, interviste, problemi, progetti, attività e storico vengono sincronizzati nel tuo spazio personale.':'Per usare gli stessi dati su PC e smartphone collega il backend incluso nel pacchetto.'}</p><div class="syncActions"><span class="${cloud?'cloudOk':'cloudLocal'}">${cloud?'● Cloud disponibile':'● Solo dispositivo'}</span>${cloud?'<button onclick="syncNow(true)">Sincronizza ora</button>':''}</div><p class="syncTime" style="margin-top:8px">${syncTimeText()}</p></div>
+      <div class="settingBox"><h3>Sincronizzazione</h3><p>${cloud?'Clienti, interviste, problemi, progetti, attività, tempi, consuntivi e storico vengono sincronizzati nel tuo spazio personale.':'Per usare gli stessi dati su PC e smartphone collega il backend incluso nel pacchetto.'}</p><div class="syncActions"><span class="${cloud?'cloudOk':'cloudLocal'}">${cloud?'● Cloud disponibile':'● Solo dispositivo'}</span>${cloud?'<button onclick="syncNow(true)">Sincronizza ora</button>':''}</div><p class="syncTime" style="margin-top:8px">${syncTimeText()}</p></div>
       <div class="settingBox"><h3>Aspetto</h3><p>Scegli come visualizzare ClientPro.</p><div class="themeChoices">
         <button data-theme-choice="dark" onclick="setAppTheme('dark')" class="${(db.theme||'dark')==='dark'?'themeOn':''}">Scuro</button>
         <button data-theme-choice="light" onclick="setAppTheme('light')" class="${db.theme==='light'?'themeOn':''}">Chiaro</button>
@@ -1026,13 +1158,13 @@ async function openAccountSettings(){
       <div class="settingBox"><h3>Backup / esportazione</h3><p>Scarica una copia completa dei tuoi dati ClientPro.</p><button onclick="exportData()">Esporta dati</button></div>
       <div class="settingBox"><h3>Ripristino dati</h3><p>Importa un backup ClientPro precedentemente esportato.</p><input id="importFile" type="file" accept=".json,application/json" onchange="importData(this.files[0])"></div>
       <div class="settingBox"><h3>Installazione</h3><p>Installa ClientPro sul dispositivo per aprirla come una normale app.</p><button onclick="installApp()">Installa app</button></div>
-      <div class="settingBox"><h3>Versione</h3><p>ClientPro Commercial Beta 12.6<br>Conteggio automatico del tempo per cliente.</p><span class="betaBadge">COMMERCIAL BETA · v12.6</span></div>
+      <div class="settingBox"><h3>Versione</h3><p>ClientPro Commercial Beta 12.7<br>Archivio clienti, storico lavori, consuntivi e indirizzi.</p><span class="betaBadge">COMMERCIAL BETA · v12.7</span></div>
     </div>`);
   requestAnimationFrame(()=>{try{modal.scrollTop=0;modalBody.scrollTop=0}catch(e){}});
 }
 
 function exportData(){
-  const blob=new Blob([JSON.stringify({exportedAt:new Date().toISOString(),version:'12.6',data:db},null,2)],{type:'application/json'});
+  const blob=new Blob([JSON.stringify({exportedAt:new Date().toISOString(),version:'12.7',data:db},null,2)],{type:'application/json'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='ClientPro_backup_'+new Date().toISOString().slice(0,10)+'.json';a.click();URL.revokeObjectURL(a.href);
 }
 async function importData(file){
@@ -1042,7 +1174,7 @@ async function importData(file){
     const incoming=obj.data||obj;
     if(!incoming||!Array.isArray(incoming.clients))throw new Error('File non valido');
     if(!confirm('Sostituire i dati attuali con questo backup?'))return;
-    db=incoming;ensureTimeData();save();modal.close();applyTheme();go('home',false);alert('Backup importato correttamente.');
+    db=incoming;ensureAllData();save();modal.close();applyTheme();go('home',false);alert('Backup importato correttamente.');
   }catch(e){alert('Il file selezionato non è un backup ClientPro valido.')}
 }
 window.addEventListener('beforeinstallprompt',e=>{
@@ -1076,13 +1208,13 @@ try{window.matchMedia('(prefers-color-scheme: light)').addEventListener('change'
 applyTheme();
 function activate(p){document.querySelectorAll('[data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page===p))}
 function go(p,push=true){renderSection(p);if(push)pushRoute({view:'section',page:p})}
-function logEvent(clientId,text){db.history.unshift({id:crypto.randomUUID(),clientId,text,date:new Date().toISOString()});save()}
+function logEvent(clientId,text,projectId=''){db.history.unshift({id:crypto.randomUUID(),clientId,projectId:projectId||'',text,date:new Date().toISOString()});save()}
 function fmt(d){try{return new Date(d).toLocaleString('it-IT',{dateStyle:'short',timeStyle:'short'})}catch{return d}}
 function home(){
- let probs=db.clients.flatMap(c=>c.problems||[]),prs=db.clients.flatMap(c=>c.projects||[]),todo=db.tasks.filter(t=>!t.done);
+ let activeClients=db.clients.filter(c=>!c.archived),activeIds=new Set(activeClients.map(c=>c.id)),probs=activeClients.flatMap(c=>c.problems||[]),prs=activeClients.flatMap(c=>c.projects||[]),todo=db.tasks.filter(t=>!t.done&&(!t.clientId||activeIds.has(t.clientId)));
  let activeProjects=prs.filter(x=>x.status!=='Completato').length, completed=prs.filter(x=>x.status==='Completato').length;
- let sent=db.clients.filter(c=>c.questionnaire?.status==='Inviato').length;
- let qDone=db.clients.filter(c=>c.questionnaire?.status==='Compilato').length;
+ let sent=activeClients.filter(c=>c.questionnaire?.status==='Inviato').length;
+ let qDone=activeClients.filter(c=>c.questionnaire?.status==='Compilato').length;
  let totalP=Math.max(prs.length,1), donePct=Math.round(completed/totalP*100);
  view.innerHTML=`
  <div class="dashboardHero"><div><h2>Panoramica attività</h2><p>Tutto quello che richiede la tua attenzione, in un'unica schermata.</p></div></div>
@@ -1090,7 +1222,7 @@ function home(){
  <div class="grid4">
    <div class="card stat dashStat" onclick="dashboardGo('clients')">
      <div class="statTop"><span>Clienti attivi</span><div class="statIcon iBlue"><button class="dashboardIconBtn" type="button" aria-label="Apri clienti" title="Clienti" onclick="event.stopPropagation();dashboardGo('clients')">${iconSvg('clients')}</button></div></div>
-     <b>${db.clients.length}</b><div class="metricDelta">Apri l'elenco clienti</div>
+     <b>${db.clients.filter(c=>!c.archived).length}</b><div class="metricDelta">Apri l'elenco clienti</div>
    </div>
    <div class="card stat dashStat" onclick="dashboardGo('problems')">
      <div class="statTop"><span>Problemi aperti</span><div class="statIcon iOrange"><button class="dashboardIconBtn" type="button" aria-label="Apri problemi" title="Problemi" onclick="event.stopPropagation();dashboardGo('problems')">${iconSvg('problems')}</button></div></div>
@@ -1147,7 +1279,7 @@ function home(){
  </div>
 
  <div class="grid2" style="margin-top:14px">
-   <div class="card"><div class="sectionHead"><h3>Clienti recenti</h3><span class="pill blue">${db.clients.length}</span></div>${miniClients(db.clients.slice(-5).reverse())}</div>
+   <div class="card"><div class="sectionHead"><h3>Clienti recenti</h3><span class="pill blue">${db.clients.filter(c=>!c.archived).length}</span></div>${miniClients(db.clients.filter(c=>!c.archived).slice(-5).reverse())}</div>
    <div class="card"><div class="sectionHead"><h3>Attività recenti</h3><span class="pill">${db.history.length}</span></div>${db.history.length?db.history.slice(0,5).map(h=>`<div class="item"><b>${esc(h.text)}</b><div class="mut">${fmt(h.date)}</div></div>`).join(''):'<div class="empty">Nessuna attività recente.</div>'}</div>
  </div>
 
@@ -1156,36 +1288,56 @@ function home(){
    <div class="card"><div class="sectionHead"><h3>Flusso di lavoro</h3></div><div class=mut>Cliente → Analisi → Problema → Soluzione → Progetto → Attività → Risolto</div></div>
  </div>`}
 function quickInterview(){
-  if(!db.clients.length){newClient();return}
-  show(`<h2>Inizia intervista</h2><label>Seleziona cliente</label><select id="qc">${db.clients.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('')}</select><button class="primary" onclick="const id=qc.value;modal.close();startInterviewForClient(id)">Apri intervista</button>`)
+  const available=db.clients.filter(c=>!c.archived);if(!available.length){newClient();return}
+  show(`<h2>Inizia intervista</h2><label>Seleziona cliente</label><select id="qc">${available.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('')}</select><button class="primary" onclick="const id=qc.value;modal.close();startInterviewForClient(id)">Apri intervista</button>`)
 }
 function quickQuestionnaire(){
-  if(!db.clients.length){newClient();return}
-  show(`<h2>Invia questionario</h2><label>Seleziona cliente</label><select id="qqc">${db.clients.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('')}</select><button class="primary" onclick="modal.close();openClient(qqc.value,'analysis');setTimeout(prepareQuestionnaire,50)">Continua</button>`)
+  const available=db.clients.filter(c=>!c.archived);if(!available.length){newClient();return}
+  show(`<h2>Invia questionario</h2><label>Seleziona cliente</label><select id="qqc">${available.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('')}</select><button class="primary" onclick="modal.close();openClient(qqc.value,'analysis');setTimeout(prepareQuestionnaire,50)">Continua</button>`)
 }
 
-function miniClients(a){return a.length?`<div class=list>${a.map(c=>`<div class="item click" onclick="openClient('${c.id}')"><b>${esc(c.name)}</b><div class=mut>${esc(c.contact||'Nessun referente')} · ${esc(c.status)}</div></div>`).join('')}</div>`:'<div class=empty>Nessun cliente.</div>'}
-function clients(){view.innerHTML=`<input id="search" placeholder="Cerca attività, referente, telefono o e-mail..." oninput="clientList.innerHTML=clientHTML(db.clients.filter(c=>(c.name+' '+(c.contact||'')+' '+(c.phone||'')+' '+(c.email||'')).toLowerCase().includes(this.value.toLowerCase())))"><div id=clientList>${clientHTML(db.clients)}</div>`}
-function clientHTML(a){return a.length?`<div class=list>${a.map(c=>`<div class="card click" onclick="openClient('${c.id}')"><div class="row between"><div><b>${esc(c.name)}</b><div class=mut>${esc(c.contact||'Nessun referente')}${c.phone?' · '+esc(c.phone):''}</div><small class=mut>${esc(c.next||'Nessuna prossima azione')}</small></div><span class=pill>${esc(c.status)}</span></div></div>`).join('')}</div>`:'<div class="card empty">Nessun cliente registrato.</div>'}
-function analysis(){let a=db.clients.filter(c=>c.interview||c.questionnaire);view.innerHTML=a.length?a.map(c=>`<div class="card click" onclick="openClient('${c.id}','analysis')"><div class="row between"><div><b>${esc(c.name)}</b><div class=mut>Intervista: ${c.interview?interviewProgress(c)+'%':'non iniziata'} · Questionario: ${esc(c.questionnaire?.status||'non inviato')}</div></div><span class=pill>Apri</span></div></div>`).join(''):'<div class="card empty">Avvia un’analisi dalla scheda cliente.</div>'}
-function projects(){let a=db.clients.flatMap(c=>(c.projects||[]).map(p=>({c,p})));view.innerHTML=a.length?a.map(x=>`<div class=card><div class="row between"><div><b>${esc(x.p.name)}</b><div class=mut>${esc(x.c.name)}</div></div><span class=pill>${esc(x.p.status)}</span></div></div>`).join(''):'<div class="card empty">Nessun progetto.</div>'}
+function miniClients(a){return a.length?`<div class=list>${a.map(c=>`<div class="item click" onclick="openClient('${c.id}')"><b>${esc(c.name)}</b><div class=mut>${esc(c.contact||'Nessun referente')} · ${c.archived?'Concluso':esc(c.status)}</div></div>`).join('')}</div>`:'<div class=empty>Nessun cliente.</div>'}
+function clients(){
+  ensureAllData();
+  const active=db.clients.filter(c=>!c.archived),closed=db.clients.filter(c=>c.archived);
+  if(clientListMode==='closed'&&!closed.length&&active.length)clientListMode='active';
+  view.innerHTML=`<div class=clientListTabs><button class="${clientListMode==='active'?'on':''}" onclick="clientListMode='active';clients()">Attivi (${active.length})</button><button class="${clientListMode==='closed'?'on':''}" onclick="clientListMode='closed';clients()">Conclusi (${closed.length})</button></div>
+  <input id="search" placeholder="Cerca attività, referente, indirizzo, telefono o e-mail..." oninput="refreshClientList(this.value)"><div id=clientList></div>`;
+  refreshClientList('');
+}
+function refreshClientList(q=''){
+  const source=db.clients.filter(c=>clientListMode==='closed'?c.archived:!c.archived);
+  const term=String(q||'').toLowerCase();
+  const filtered=source.filter(c=>[c.name,c.contact,c.phone,c.email,c.sector,addressText(c),c.address?.operational].join(' ').toLowerCase().includes(term));
+  clientList.innerHTML=clientHTML(filtered);
+}
+function clientHTML(a){return a.length?`<div class=list>${a.map(c=>`<div class="card click" onclick="openClient('${c.id}')"><div class="row between"><div><b>${esc(c.name)}</b><div class=mut>${esc(c.contact||'Nessun referente')}${c.phone?' · '+esc(c.phone):''}</div>${addressText(c)?`<small class=mut>${esc(addressText(c))}</small><br>`:''}<small class=mut>${esc(c.archived?'Cliente concluso':c.next||'Nessuna prossima azione')}</small></div><span class="pill ${c.archived?'archiveBadge':''}">${c.archived?'Concluso':esc(c.status)}</span></div></div>`).join('')}</div>`:`<div class="card empty">${clientListMode==='closed'?'Nessun cliente concluso.':'Nessun cliente attivo.'}</div>`}
+function analysis(){let a=db.clients.filter(c=>!c.archived&&(c.interview||c.questionnaire));view.innerHTML=a.length?a.map(c=>`<div class="card click" onclick="openClient('${c.id}','analysis')"><div class="row between"><div><b>${esc(c.name)}</b><div class=mut>Intervista: ${c.interview?interviewProgress(c)+'%':'non iniziata'} · Questionario: ${esc(c.questionnaire?.status||'non inviato')}</div></div><span class=pill>Apri</span></div></div>`).join(''):'<div class="card empty">Avvia un’analisi dalla scheda cliente.</div>'}
+function projects(){let a=db.clients.flatMap(c=>(c.projects||[]).map(p=>({c,p})));view.innerHTML=a.length?a.map(x=>`<div class="card projectCard" onclick="openClient('${x.c.id}','projects');setTimeout(()=>openProject('${x.p.id}'),30)"><div class="row between"><div><b>${esc(x.p.name)}</b><div class=mut>${esc(x.c.name)} · ${projectLabel(x.p)}</div></div><span class=pill>${esc(x.p.status)}</span></div></div>`).join(''):'<div class="card empty">Nessun progetto.</div>'}
 function tasks(){view.innerHTML=`<div class="row between"><h3>Attività</h3><button class=primary onclick="newTask()">＋ Nuova attività</button></div>${taskList(db.tasks)}`}
-function taskList(a){return a.length?`<div class=list>${a.map(t=>{let c=db.clients.find(x=>x.id===t.clientId);return `<div class=item><div class="row between"><div><b style="${t.done?'text-decoration:line-through':''}">${esc(t.title)}</b><div class=mut>${c?esc(c.name)+' · ':''}${esc(t.date||'Senza scadenza')}</div></div><button onclick="toggleTask('${t.id}')">${t.done?'↶':'✓'}</button></div></div>`}).join('')}</div>`:'<div class=empty>Nessuna attività.</div>'}
-function openClient(id,t='overview',push=true){const next=db.clients.find(c=>c.id===id);if(!next){go('clients',push);return}if(cur?.id!==id)closeTimeSession('cambio-cliente');activeView='client';cur=next;tab=t;activate('');crumb.textContent='Clienti / Scheda di lavoro';title.textContent=cur.name;renderClient();syncTimeContext();window.scrollTo(0,0);if(push)pushRoute({view:'client',clientId:id,tab:t})}
-function switchClientTab(t,push=true){if(!cur)return;tab=t;renderClient();syncTimeContext();window.scrollTo(0,0);if(push)pushRoute({view:'client',clientId:cur.id,tab:t})}
-function renderClient(){let c=cur,ps=c.problems||[],prs=c.projects||[],hs=db.history.filter(h=>h.clientId===c.id).slice(0,8);
-view.innerHTML=`<div class=card><div class="row between"><div><h2>${esc(c.name)}</h2><div class=mut>${esc(c.contact||'Nessun referente')} ${c.phone?'· '+esc(c.phone):''} ${c.email?'· '+esc(c.email):''}</div><p><span class=pill>${esc(c.status)}</span></p></div><button onclick=editClient()>Modifica</button></div></div>
-<div class=tabs>${[['overview','Panoramica'],['analysis','Analisi'],['problems','Problemi'],['projects','Progetti'],['tasks','Attività']].map(x=>`<button class="${tab===x[0]?'on':''}" onclick="switchClientTab('${x[0]}')">${x[1]}</button>`).join('')}</div><div id=ct></div>`;
-if(tab==='overview')ct.innerHTML=`${timeSummaryHTML(c)}<div class=grid4><div class="card stat"><span>Problemi</span><b>${ps.length}</b></div><div class="card stat"><span>Progetti</span><b>${prs.length}</b></div><div class="card stat"><span>Attività</span><b>${db.tasks.filter(t=>t.clientId===c.id&&!t.done).length}</b></div><div class="card stat"><span>Questionario</span><b style="font-size:16px">${esc(c.questionnaire?.status||'Non inviato')}</b></div></div>
-<div class=grid2><div class=card><h3>Prossima azione</h3><b>${esc(c.next||'Nessuna')}</b></div><div class=card><h3>Note</h3><div class=mut>${esc(c.notes||'Nessuna nota')}</div></div></div>
-<div class=card><h3>Storico recente</h3>${hs.length?hs.map(h=>`<div class=item><b>${esc(h.text)}</b><div class=mut>${fmt(h.date)}</div></div>`).join(''):'<div class=mut>Nessun evento.</div>'}</div>`;
-if(tab==='analysis')ct.innerHTML=`<div class=grid2><div class=card><div class="row between"><h2>Intervista digitale</h2><span class="pill blue">${c.interview?interviewProgress(c)+'%':'Non iniziata'}</span></div><p class=mut>Compila direttamente da PC, tablet o telefono con salvataggio automatico.</p><button class=primary onclick="startInterviewForClient('${c.id}')">${c.interview?'Continua intervista':'Inizia intervista'}</button></div>
-<div class=card><div class="row between"><h2>Questionario cliente</h2><span class="pill ${c.questionnaire?.status==='Compilato'?'green':c.questionnaire?.status==='In compilazione'?'orange':c.questionnaire?.status==='Inviato'?'blue':''}">${esc(c.questionnaire?.status||'Non inviato')}</span></div><p class=mut>${questionnaireStatusText(c)}</p><div class=row>${c.questionnaire?.status==='Compilato'?'<button class=primary onclick=viewQuestionnaireAnswers()>Vedi risposte</button>':'<button class=primary onclick=prepareQuestionnaire()>Invia questionario</button>'}<button onclick=previewQuestionnaire()>Anteprima</button></div></div></div>`;
-// Mantiene la sincronizzazione stabile senza ridisegnare l'intervista.
-if(tab==='analysis')setTimeout(()=>syncQuestionnaire(c.id,false),120);
-if(tab==='problems')ct.innerHTML=`<div class="row between"><h3>Problemi da risolvere</h3><button class=primary onclick=newProblem()>＋ Nuovo problema</button></div>${ps.length?ps.map((p,i)=>`<div class="card problem ${p.status==='Risolto'?'resolved':''} click" onclick="openProblem(${i})"><div class="row between"><div><b>${esc(p.title)}</b><div class=mut>${esc(p.description||'')}</div></div><span class=pill>${esc(p.status)}</span></div></div>`).join(''):'<div class="card empty">Nessun problema registrato.</div>'}`;
-if(tab==='projects')ct.innerHTML=`<div class="row between"><h3>Progetti</h3><button class=primary onclick=newProject()>＋ Nuovo progetto</button></div>${prs.length?prs.map(p=>`<div class=card><div class="row between"><div><b>${esc(p.name)}</b><div class=mut>${esc(p.description||'')}</div></div><span class=pill>${esc(p.status)}</span></div></div>`).join(''):'<div class="card empty">Nessun progetto.</div>'}`;
-if(tab==='tasks')ct.innerHTML=`<div class="row between"><h3>Attività cliente</h3><button class=primary onclick="newTask('${c.id}')">＋ Attività</button></div>${taskList(db.tasks.filter(t=>t.clientId===c.id))}`}
+function taskList(a,readonly=false){return a.length?`<div class=list>${a.map(t=>{let c=db.clients.find(x=>x.id===t.clientId),p=c&&t.projectId?projectById(c,t.projectId):null;return `<div class=item><div class="row between"><div><b style="${t.done?'text-decoration:line-through':''}">${esc(t.title)}</b><div class=mut>${c?esc(c.name)+' · ':''}${p?esc(p.name)+' · ':''}${esc(t.date||'Senza scadenza')}</div></div>${readonly?`<span class="pill ${t.done?'green':''}">${t.done?'Completata':'Aperta'}</span>`:`<button onclick="toggleTask('${t.id}')">${t.done?'↶':'✓'}</button>`}</div></div>`}).join('')}</div>`:'<div class=empty>Nessuna attività.</div>'}
+function openClient(id,t='overview',push=true){
+  const next=db.clients.find(c=>c.id===id);if(!next){go('clients',push);return}
+  if(cur?.id!==id)closeTimeSession('cambio-cliente');
+  activeProjectId='';activeView='client';cur=next;ensureClientData(cur);tab=t;activate('');crumb.textContent='Clienti / Scheda di lavoro';title.textContent=cur.name;renderClient();syncTimeContext();window.scrollTo(0,0);if(push)pushRoute({view:'client',clientId:id,tab:t})
+}
+function switchClientTab(t,push=true){if(!cur)return;activeProjectId='';tab=t;renderClient();syncTimeContext();window.scrollTo(0,0);if(push)pushRoute({view:'client',clientId:cur.id,tab:t})}
+function renderClient(){
+  let c=cur;ensureClientData(c);let ps=c.problems||[],prs=c.projects||[],hs=db.history.filter(h=>h.clientId===c.id).slice(0,8),addr=addressText(c),mh=mapsHref(c);
+  view.innerHTML=`<div class=card><div class="row between"><div><h2>${esc(c.name)}</h2><div class=mut>${esc(c.contact||'Nessun referente')} ${c.phone?'· '+esc(c.phone):''} ${c.email?'· '+esc(c.email):''}</div>${addr?`<div class=addressLine><span>📍 ${esc(addr)}</span>${mh?`<a href="${esc(mh)}" target="_blank" rel="noopener">Apri mappa</a>`:''}</div>`:''}${c.address.operational?`<div class=mut>Sede operativa: ${esc(c.address.operational)}</div>`:''}<p><span class="pill ${c.archived?'archiveBadge':''}">${c.archived?'Cliente concluso':esc(c.status)}</span></p></div><div class=softActions>${c.archived?'<button class=primary onclick=reactivateClient()>Riattiva cliente</button>':'<button onclick=archiveClient()>Concludi cliente</button>'}<button onclick=editClient()>Modifica</button></div></div></div>
+  <div class=tabs>${[['overview','Panoramica'],['analysis','Analisi'],['problems','Problemi'],['projects','Progetti'],['tasks','Attività'],['history','Storico']].map(x=>`<button class="${tab===x[0]?'on':''}" onclick="switchClientTab('${x[0]}')">${x[1]}</button>`).join('')}</div><div id=ct></div>`;
+  if(tab==='overview')ct.innerHTML=`${timeSummaryHTML(c)}<div class=grid4><div class="card stat"><span>Problemi</span><b>${ps.length}</b></div><div class="card stat"><span>Progetti</span><b>${prs.length}</b></div><div class="card stat"><span>Attività</span><b>${db.tasks.filter(t=>t.clientId===c.id&&!t.done).length}</b></div><div class="card stat"><span>Questionario</span><b style="font-size:16px">${esc(c.questionnaire?.status||'Non inviato')}</b></div></div>
+  <div class=grid2><div class=card><h3>Prossima azione</h3><b>${esc(c.archived?'Cliente archiviato':c.next||'Nessuna')}</b></div><div class=card><h3>Indirizzo attività</h3>${addr?`<div>${esc(addr)}</div>${mh?`<p><a href="${esc(mh)}" target="_blank" rel="noopener">Apri su Google Maps</a></p>`:''}`:'<div class=mut>Indirizzo non inserito.</div>'}${c.address.operational?`<div class=mut>Sede operativa: ${esc(c.address.operational)}</div>`:''}</div></div>
+  <div class=grid2><div class=card><h3>Note</h3><div class=mut>${esc(c.notes||'Nessuna nota')}</div></div><div class=card><h3>Stato lavori</h3><div class=mut>${prs.filter(p=>p.status!=='Completato').length} in corso · ${prs.filter(p=>p.status==='Completato').length} conclusi</div></div></div>
+  <div class=card><h3>Storico recente</h3>${hs.length?hs.map(h=>`<div class=item><b>${esc(h.text)}</b><div class=mut>${fmt(h.date)}</div></div>`).join(''):'<div class=mut>Nessun evento.</div>'}</div>`;
+  if(tab==='analysis')ct.innerHTML=`<div class=grid2><div class=card><div class="row between"><h2>Intervista digitale</h2><span class="pill blue">${c.interview?interviewProgress(c)+'%':'Non iniziata'}</span></div><p class=mut>Compila direttamente da PC, tablet o telefono con salvataggio automatico.</p><button class=primary ${c.archived?'disabled':''} onclick="startInterviewForClient('${c.id}')">${c.interview?'Continua intervista':'Inizia intervista'}</button></div>
+  <div class=card><div class="row between"><h2>Questionario cliente</h2><span class="pill ${c.questionnaire?.status==='Compilato'?'green':c.questionnaire?.status==='In compilazione'?'orange':c.questionnaire?.status==='Inviato'?'blue':''}">${esc(c.questionnaire?.status||'Non inviato')}</span></div><p class=mut>${questionnaireStatusText(c)}</p><div class=row>${c.questionnaire?.status==='Compilato'?'<button class=primary onclick=viewQuestionnaireAnswers()>Vedi risposte</button>':`<button class=primary ${c.archived?'disabled':''} onclick=prepareQuestionnaire()>Invia questionario</button>`}<button onclick=previewQuestionnaire()>Anteprima</button></div></div></div>`;
+  if(tab==='analysis')setTimeout(()=>syncQuestionnaire(c.id,false),120);
+  if(tab==='problems')ct.innerHTML=`<div class="row between"><h3>Problemi da risolvere</h3><button class=primary ${c.archived?'disabled':''} onclick=newProblem()>＋ Nuovo problema</button></div>${ps.length?ps.map((p,i)=>`<div class="card problem ${p.status==='Risolto'?'resolved':''} click" onclick="openProblem(${i})"><div class="row between"><div><b>${esc(p.title)}</b><div class=mut>${esc(p.description||'')}</div></div><span class=pill>${esc(p.status)}</span></div></div>`).join(''):'<div class="card empty">Nessun problema registrato.</div>'}`;
+  if(tab==='projects')ct.innerHTML=`<div class="row between"><h3>Progetti / lavori</h3><button class=primary ${c.archived?'disabled':''} onclick=newProject()>＋ Nuovo progetto</button></div>${prs.length?prs.map(p=>{ensureProjectData(p,c);const lc=latestClosure(p);return `<div class="card projectCard" onclick="openProject('${p.id}')"><div class="row between"><div><b>${esc(p.name)}</b><div class=mut>${esc(p.description||'')}</div><div class=projectMeta><span class=pill>${projectLabel(p)}</span>${lc?`<span class="pill green">${formatDuration(lc.durationMs||0)} · ${moneyFmt(lc.estimatedValue||0)}</span>`:''}</div></div><span class=pill>${esc(p.status)}</span></div></div>`}).join(''):'<div class="card empty">Nessun progetto.</div>'}`;
+  if(tab==='tasks')ct.innerHTML=`<div class="row between"><h3>Attività cliente</h3><button class=primary ${c.archived?'disabled':''} onclick="newTask('${c.id}')">＋ Attività</button></div>${taskList(db.tasks.filter(t=>t.clientId===c.id),c.archived)}`;
+  if(tab==='history')ct.innerHTML=clientHistoryHTML(c);
+}
 function interviewProgress(c){if(!c.interview)return 0;let a=c.interview.answers||{},filled=0;for(let i=1;i<=33;i++){let v=a[i];if(Array.isArray(v)?v.filter(Boolean).length:String(v||'').trim())filled++}return Math.round(filled/33*100)}
 function ensureInterview(c){
   if(!c)return null;
@@ -1211,7 +1363,7 @@ function startInterviewForClient(clientId,push=true){
     activeView='interview';
     cur=c;
     tab='interview';
-    syncTimeContext();
+    ensureClientData(cur);activeProjectId='';syncTimeContext();
     ensureInterview(cur);
     renderInterview();
     window.scrollTo(0,0);
@@ -1339,10 +1491,64 @@ async function submitPublicQuestionnaire(){
   }
 }
 function show(h){modalBody.innerHTML=h;modal.showModal();requestAnimationFrame(()=>{try{modal.scrollTop=0;modalBody.scrollTop=0}catch(e){}})}
-function newClient(){show(`<h2>Nuovo cliente</h2><label>Nome attività *</label><input id=n><label>Referente</label><input id=r><label>Telefono</label><input id=ph><label>E-mail</label><input id=em><label>Settore</label><input id=se><label>Note</label><textarea id=no></textarea><button class=primary onclick=saveClient()>Salva cliente</button>`)}
-function saveClient(){if(!n.value.trim())return alert('Inserisci il nome attività.');let c={id:crypto.randomUUID(),name:n.value.trim(),contact:r.value,phone:ph.value,email:em.value,sector:se.value,notes:no.value,status:'Nuovo contatto',next:'Fare prima analisi',problems:[],projects:[]};db.clients.push(c);logEvent(c.id,'Cliente creato');save();modal.close();openClient(c.id)}
-function editClient(){show(`<h2>Modifica cliente</h2><label>Stato</label><select id=st>${['Nuovo contatto','Analisi','Proposta','Cliente','Progetto attivo','Concluso'].map(x=>`<option ${cur.status===x?'selected':''}>${x}</option>`).join('')}</select><label>Prossima azione</label><input id=nx value="${esc(cur.next||'')}"><label>Note</label><textarea id=nt>${esc(cur.notes||'')}</textarea><div class="row"><button class=primary onclick=saveEdit()>Salva</button><button style="border-color:rgba(255,90,90,.35);color:#ff8f8f" onclick="modal.close();setTimeout(deleteClient,50)">Elimina cliente</button></div>`)}
-function saveEdit(){cur.status=st.value;cur.next=nx.value;cur.notes=nt.value;logEvent(cur.id,'Scheda cliente aggiornata');save();modal.close();renderClient()}
+function newClient(){show(`<h2>Nuovo cliente</h2><label>Nome attività *</label><input id=n><label>Referente</label><input id=r><label>Telefono</label><input id=ph><label>E-mail</label><input id=em><label>Settore</label><input id=se><div class=section>INDIRIZZO ATTIVITÀ</div><label>Via e numero civico</label><input id=adst><div class=grid2><div><label>CAP</label><input id=adzip></div><div><label>Città</label><input id=adcity></div></div><label>Provincia</label><input id=adprov placeholder="es. MI"><label>Sede operativa diversa (facoltativo)</label><input id=adop><label>Link Google Maps (facoltativo)</label><input id=admap placeholder="https://..."><label>Note</label><textarea id=no></textarea><button class=primary onclick=saveClient()>Salva cliente</button>`)}
+function saveClient(){
+  if(!n.value.trim())return alert('Inserisci il nome attività.');
+  let c={id:crypto.randomUUID(),name:n.value.trim(),contact:r.value,phone:ph.value,email:em.value,sector:se.value,notes:no.value,status:'Nuovo contatto',next:'Fare prima analisi',archived:false,address:{street:adst.value,zip:adzip.value,city:adcity.value,province:adprov.value,operational:adop.value,mapsUrl:admap.value},hourlyRate:'',problems:[],projects:[]};
+  db.clients.push(c);logEvent(c.id,'Cliente creato');save();modal.close();openClient(c.id)
+}
+function editClient(){
+  ensureClientData(cur);
+  show(`<h2>Modifica cliente</h2><label>Nome attività *</label><input id=en value="${esc(cur.name||'')}"><label>Referente</label><input id=er value="${esc(cur.contact||'')}"><label>Telefono</label><input id=eph value="${esc(cur.phone||'')}"><label>E-mail</label><input id=eem value="${esc(cur.email||'')}"><label>Settore</label><input id=ese value="${esc(cur.sector||'')}"><div class=section>INDIRIZZO ATTIVITÀ</div><label>Via e numero civico</label><input id=eadst value="${esc(cur.address.street||'')}"><div class=grid2><div><label>CAP</label><input id=eadzip value="${esc(cur.address.zip||'')}"></div><div><label>Città</label><input id=eadcity value="${esc(cur.address.city||'')}"></div></div><label>Provincia</label><input id=eadprov value="${esc(cur.address.province||'')}"><label>Sede operativa diversa (facoltativo)</label><input id=eadop value="${esc(cur.address.operational||'')}"><label>Link Google Maps (facoltativo)</label><input id=eadmap value="${esc(cur.address.mapsUrl||'')}"><div class=section>GESTIONE</div><label>Stato</label><select id=st>${['Nuovo contatto','Analisi','Proposta','Cliente','Progetto attivo','Concluso'].map(x=>`<option ${cur.status===x?'selected':''}>${x}</option>`).join('')}</select><label>Prossima azione</label><input id=nx value="${esc(cur.next||'')}"><label>Note</label><textarea id=nt>${esc(cur.notes||'')}</textarea><div class="softActions"><button class=primary onclick=saveEdit()>Salva</button><button class=dangerBtn onclick="modal.close();setTimeout(deleteClient,50)">Elimina cliente</button></div>`)
+}
+function saveEdit(){
+  if(!en.value.trim())return alert('Inserisci il nome attività.');
+  cur.name=en.value.trim();cur.contact=er.value;cur.phone=eph.value;cur.email=eem.value;cur.sector=ese.value;cur.status=st.value;cur.next=nx.value;cur.notes=nt.value;
+  cur.address={street:eadst.value,zip:eadzip.value,city:eadcity.value,province:eadprov.value,operational:eadop.value,mapsUrl:eadmap.value};
+  logEvent(cur.id,'Scheda cliente aggiornata');save();modal.close();title.textContent=cur.name;renderClient()
+}
+function archiveClient(){
+  if(!cur||cur.archived)return;
+  const open=openProjectsFor(cur);
+  if(open.length&&!confirm(`Ci sono ${open.length} progetti non conclusi. Vuoi archiviare comunque il cliente?`))return;
+  if(!open.length&&!confirm(`Spostare "${cur.name}" tra i clienti conclusi? Tutto lo storico resterà disponibile.`))return;
+  closeTimeSession('cliente-concluso');activeProjectId='';
+  cur.archived=true;cur.archivedAt=new Date().toISOString();cur.status='Concluso';cur.next='';
+  logEvent(cur.id,'Cliente concluso e spostato in archivio');save();renderClient()
+}
+function reactivateClient(){
+  if(!cur||!cur.archived)return;
+  const completed=(cur.projects||[]).filter(p=>p.status==='Completato'||(p.closures||[]).length);
+  show(`<h2>Nuovo lavoro per ${esc(cur.name)}</h2><p class=mut>Scegli come gestire la nuova richiesta senza perdere lo storico precedente.</p><div class=list>
+    <button class=item onclick="chooseResumeProject()">↶ <b>Riprendi un progetto precedente</b><br><span class=mut>Correggi o continui un lavoro già concluso.</span></button>
+    <button class=item onclick="chooseAssistanceProject()">🛠 <b>Assistenza / modifica</b><br><span class=mut>Crea un intervento separato collegato a un vecchio progetto.</span></button>
+    <button class=item onclick="reactivateWithNewProject()">＋ <b>Nuovo progetto</b><br><span class=mut>Il nuovo lavoro non dipende da quelli precedenti.</span></button>
+  </div>${completed.length?'':`<p class=mut>Non risultano progetti precedenti conclusi: puoi creare direttamente un nuovo progetto.</p>`}`)
+}
+function activateClientBase(){
+  cur.archived=false;cur.archivedAt='';cur.status='Cliente';cur.next='Definire il nuovo lavoro';logEvent(cur.id,'Cliente riattivato');save();
+}
+function chooseResumeProject(){
+  const list=(cur.projects||[]).filter(p=>p.status==='Completato'||(p.closures||[]).length);
+  if(!list.length)return alert('Non ci sono progetti precedenti da riaprire.');
+  show(`<h2>Riprendi progetto precedente</h2><label>Progetto</label><select id=resumePid>${list.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('')}</select><button class=primary onclick=resumeSelectedProject()>Riprendi progetto</button>`)
+}
+function resumeSelectedProject(){
+  const p=projectById(cur,resumePid.value);if(!p)return;
+  activateClientBase();p.status='In corso';p.completedAt='';p.relationType=p.relationType||'new';logEvent(cur.id,'Riaperto progetto “'+p.name+'”',p.id);save();modal.close();tab='projects';renderClient();setTimeout(()=>openProject(p.id),30)
+}
+function chooseAssistanceProject(){
+  const list=(cur.projects||[]).filter(p=>(p.closures||[]).length||p.status==='Completato');
+  if(!list.length)return alert('Non ci sono progetti precedenti a cui collegare l’assistenza.');
+  show(`<h2>Assistenza / modifica</h2><label>Collega al progetto</label><select id=assistPid>${list.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('')}</select><label>Nome intervento</label><input id=assistName placeholder="es. Modifica gestione magazzino"><label>Descrizione</label><textarea id=assistDesc></textarea><button class=primary onclick=createAssistanceProject()>Crea intervento</button>`)
+}
+function createAssistanceProject(){
+  const parent=projectById(cur,assistPid.value);if(!parent)return;
+  activateClientBase();
+  const p={id:crypto.randomUUID(),name:assistName.value.trim()||('Assistenza – '+parent.name),description:assistDesc.value,status:'In corso',startedAt:new Date().toISOString(),completedAt:'',relationType:'assistance',parentProjectId:parent.id,closures:[]};
+  cur.projects.push(p);cur.status='Progetto attivo';logEvent(cur.id,'Creato intervento collegato a “'+parent.name+'”',p.id);save();modal.close();tab='projects';renderClient();setTimeout(()=>openProject(p.id),30)
+}
+function reactivateWithNewProject(){activateClientBase();modal.close();newProject()}
 
 async function deleteClient(){
   if(!cur)return;
@@ -1360,6 +1566,7 @@ async function deleteClient(){
 
   db.tasks=db.tasks.filter(t=>t.clientId!==clientId);
   db.history=db.history.filter(h=>h.clientId!==clientId);
+  db.timeEntries=(db.timeEntries||[]).filter(e=>e.clientId!==clientId);
   db.clients=db.clients.filter(c=>c.id!==clientId);
   save();
 
@@ -1370,13 +1577,80 @@ async function deleteClient(){
 
 function newProblem(){show(`<h2>Nuovo problema</h2><label>Titolo *</label><input id=pt><label>Descrizione / situazione attuale</label><textarea id=pd></textarea><label>Priorità</label><select id=pp><option>Alta</option><option selected>Media</option><option>Bassa</option></select><button class=primary onclick=saveProblem()>Aggiungi problema</button>`)}
 function saveProblem(){if(!pt.value.trim())return;cur.problems.push({title:pt.value,description:pd.value,priority:pp.value,solution:'',status:'Da analizzare'});logEvent(cur.id,'Creato problema “'+pt.value+'”');save();modal.close();renderClient()}
-function openProblem(i){let p=cur.problems[i];show(`<h2>${esc(p.title)}</h2><div class=mut>Priorità: ${esc(p.priority)}${p.source?' · '+esc(p.source):''}</div><p>${esc(p.description)}</p><label>Soluzione</label><textarea id=sol>${esc(p.solution||'')}</textarea><label>Stato</label><select id=pst>${['Da analizzare','Soluzione individuata','In lavorazione','Risolto'].map(x=>`<option ${p.status===x?'selected':''}>${x}</option>`).join('')}</select><button class=primary onclick="updateProblem(${i})">Salva</button>`)}
+function openProblem(i){let p=cur.problems[i];if(cur.archived){show(`<h2>${esc(p.title)}</h2><div class=mut>Priorità: ${esc(p.priority)}${p.source?' · '+esc(p.source):''}</div><p>${esc(p.description)}</p><div class=section>SOLUZIONE</div><div class=item>${esc(p.solution||'Nessuna soluzione registrata')}</div><p><span class=pill>${esc(p.status)}</span></p><button onclick="modal.close()">Chiudi</button>`);return}show(`<h2>${esc(p.title)}</h2><div class=mut>Priorità: ${esc(p.priority)}${p.source?' · '+esc(p.source):''}</div><p>${esc(p.description)}</p><label>Soluzione</label><textarea id=sol>${esc(p.solution||'')}</textarea><label>Stato</label><select id=pst>${['Da analizzare','Soluzione individuata','In lavorazione','Risolto'].map(x=>`<option ${p.status===x?'selected':''}>${x}</option>`).join('')}</select><button class=primary onclick="updateProblem(${i})">Salva</button>`)}
 function updateProblem(i){let old=cur.problems[i].status;cur.problems[i].solution=sol.value;cur.problems[i].status=pst.value;if(old!==pst.value)logEvent(cur.id,'Problema “'+cur.problems[i].title+'” → '+pst.value);save();modal.close();renderClient()}
-function newProject(){show(`<h2>Nuovo progetto</h2><label>Nome *</label><input id=pn><label>Descrizione</label><textarea id=pdesc></textarea><label>Stato</label><select id=pstate><option>Da fare</option><option>In corso</option><option>Da far provare</option><option>Modifiche richieste</option><option>Completato</option></select><button class=primary onclick=saveProject()>Crea progetto</button>`)}
-function saveProject(){if(!pn.value.trim())return;cur.projects.push({name:pn.value,description:pdesc.value,status:pstate.value});logEvent(cur.id,'Creato progetto “'+pn.value+'”');save();modal.close();renderClient()}
-function newTask(cid=''){show(`<h2>Nuova attività</h2><label>Titolo *</label><input id=tt><label>Cliente</label><select id=tc><option value="">Nessuno</option>${db.clients.map(c=>`<option value="${c.id}" ${cid===c.id?'selected':''}>${esc(c.name)}</option>`).join('')}</select><label>Scadenza</label><input type=date id=td><button class=primary onclick=saveTask()>Aggiungi</button>`)}
-function saveTask(){if(!tt.value.trim())return;db.tasks.push({id:crypto.randomUUID(),title:tt.value,clientId:tc.value,date:td.value,done:false});if(tc.value)logEvent(tc.value,'Creata attività “'+tt.value+'”');save();modal.close();cur?renderClient():go('tasks')}
-function toggleTask(id){let t=db.tasks.find(x=>x.id===id);t.done=!t.done;if(t.clientId)logEvent(t.clientId,(t.done?'Completata':'Riaperta')+' attività “'+t.title+'”');save();cur?renderClient():go('tasks')}
+function newProject(){
+  if(!cur)return;
+  if(cur.archived)return alert('Riattiva prima il cliente.');
+  show(`<h2>Nuovo progetto</h2><label>Nome *</label><input id=pn><label>Descrizione</label><textarea id=pdesc></textarea><label>Stato</label><select id=pstate><option>Da fare</option><option>In corso</option><option>Da far provare</option><option>Modifiche richieste</option></select><button class=primary onclick=saveProject()>Crea progetto</button>`)
+}
+function saveProject(){
+  if(!pn.value.trim())return alert('Inserisci il nome del progetto.');
+  const p={id:crypto.randomUUID(),name:pn.value.trim(),description:pdesc.value,status:pstate.value,startedAt:new Date().toISOString(),completedAt:'',relationType:'new',parentProjectId:'',closures:[]};
+  cur.projects.push(p);cur.status='Progetto attivo';logEvent(cur.id,'Creato progetto “'+p.name+'”',p.id);save();modal.close();renderClient()
+}
+function openProject(projectId){
+  if(!cur)return;
+  const p=projectById(cur,projectId);if(!p)return;
+  ensureProjectData(p,cur);activeProjectId=p.id;syncTimeContext();
+  const parent=p.parentProjectId?projectById(cur,p.parentProjectId):null;
+  const closures=(p.closures||[]).slice().reverse();
+  const projectEvents=db.history.filter(h=>h.clientId===cur.id&&h.projectId===p.id).slice(0,12);
+  const pTasks=db.tasks.filter(t=>t.clientId===cur.id&&t.projectId===p.id);
+  const tracked=projectTimeMs(cur,p);
+  const ro=!!cur.archived;
+  show(`<div class=modalHead><div><h2>${esc(p.name)}</h2><div class=mut>${projectLabel(p)}${parent?' · collegato a '+esc(parent.name):''}</div></div><button class=modalClose onclick="closeProjectModal()" aria-label="Chiudi">×</button></div>
+  <label>Descrizione</label><textarea id=projDesc ${ro?'disabled':''}>${esc(p.description||'')}</textarea><label>Stato</label><select id=projState ${ro?'disabled':''}>${['Da fare','In corso','Da far provare','Modifiche richieste','Completato'].map(x=>`<option ${p.status===x?'selected':''}>${x}</option>`).join('')}</select>
+  <div class=summaryGrid><div class=summaryBox><small>Tempo tracciato</small><b>${formatDuration(tracked)}</b></div><div class=summaryBox><small>Tariffa attuale</small><b>${Number(cur.hourlyRate)?moneyFmt(cur.hourlyRate)+'/h':'—'}</b></div><div class=summaryBox><small>Attività</small><b>${pTasks.length}</b></div><div class=summaryBox><small>Consuntivi</small><b>${closures.length}</b></div></div>
+  <div class=softActions>${ro?`<button onclick="closeProjectModal()">Chiudi</button>`:`<button class=primary onclick="saveProjectEdit('${p.id}')">Salva modifiche</button><button onclick="newTask('${cur.id}','${p.id}')">＋ Attività collegata</button>${p.status!=='Completato'?`<button onclick="prepareCloseProject('${p.id}')">✓ Concludi lavoro</button>`:`<button onclick="reopenProjectDirect('${p.id}')">↶ Riapri progetto</button>`}`}</div>
+  <div class=section>CONSUNTIVI</div>${closures.length?closures.map(s=>closureSummaryHTML(cur,p,s)).join(''):'<div class=mut>Nessun consuntivo ancora.</div>'}
+  <div class=section>STORICO PROGETTO</div>${projectEvents.length?projectEvents.map(h=>`<div class=item><b>${esc(h.text)}</b><div class=mut>${fmt(h.date)}</div></div>`).join(''):'<div class=mut>Nessun evento specifico.</div>'}`)
+}
+function closeProjectModal(){activeProjectId='';modal.close();syncTimeContext()}
+function saveProjectEdit(id){
+  const p=projectById(cur,id);if(!p)return;
+  const old=p.status;p.description=projDesc.value;p.status=projState.value;
+  if(old!==p.status)logEvent(cur.id,'Progetto “'+p.name+'” → '+p.status,p.id);
+  save();closeProjectModal();renderClient()
+}
+function reopenProjectDirect(id){
+  const p=projectById(cur,id);if(!p)return;
+  p.status='In corso';p.completedAt='';if(cur.archived){cur.archived=false;cur.archivedAt='';cur.status='Progetto attivo'}
+  logEvent(cur.id,'Riaperto progetto “'+p.name+'”',p.id);save();closeProjectModal();renderClient()
+}
+function prepareCloseProject(id){
+  closeTimeSession('chiusura-progetto');
+  const p=projectById(cur,id);if(!p)return;
+  const autoMs=projectTimeMs(cur,p),hours=(autoMs/3600000);
+  const rate=Number(cur.hourlyRate)||0,estimated=hours*rate;
+  show(`<h2>Concludi lavoro</h2><p><b>${esc(p.name)}</b></p><p class=mut>Il consuntivo viene salvato nello storico e non verrà ricalcolato quando cambierai tariffa.</p>
+  <label>Ore da consuntivare</label><input id=closeHours type=number min=0 step=0.25 value="${hours?hours.toFixed(2):'0'}"><label>Tariffa €/ora</label><input id=closeRate type=number min=0 step=0.5 value="${rate||0}">
+  <label>Importo concordato (facoltativo)</label><input id=closeAgreed type=number min=0 step=0.01 placeholder="${estimated.toFixed(2)}"><label>Importo già incassato (facoltativo)</label><input id=closeCollected type=number min=0 step=0.01 placeholder="0">
+  <label>Risultato / note finali</label><textarea id=closeResult placeholder="Cosa è stato consegnato o risolto?"></textarea>
+  <button class=primary onclick="finalizeProject('${p.id}')">Salva consuntivo e concludi</button>`)
+}
+function finalizeProject(id){
+  const p=projectById(cur,id);if(!p)return;
+  const h=Math.max(0,Number(closeHours.value)||0),rate=Math.max(0,Number(closeRate.value)||0),durationMs=Math.round(h*3600000),estimatedValue=h*rate;
+  const agreed=closeAgreed.value===''?'':Math.max(0,Number(closeAgreed.value)||0),collected=closeCollected.value===''?0:Math.max(0,Number(closeCollected.value)||0);
+  const resolved=(cur.problems||[]).filter(x=>x.status==='Risolto').map(x=>x.title);
+  const doneTasks=db.tasks.filter(t=>t.clientId===cur.id&&t.projectId===p.id&&t.done).map(t=>t.title);
+  const snap={id:crypto.randomUUID(),startedAt:p.startedAt||new Date().toISOString(),closedAt:new Date().toISOString(),durationMs,hourlyRate:rate,estimatedValue,agreedAmount:agreed,collectedAmount:collected,result:closeResult.value,resolvedProblems:resolved,completedTasks:doneTasks};
+  p.closures=p.closures||[];p.closures.push(snap);p.status='Completato';p.completedAt=snap.closedAt;
+  logEvent(cur.id,`Concluso progetto “${p.name}” · ${formatDuration(durationMs)} · ${moneyFmt(estimatedValue)}`,p.id);
+  save();modal.close();activeProjectId='';tab='projects';renderClient();syncTimeContext()
+}
+function newTask(cid='',projectId=''){
+  const clientOptions=db.clients.filter(c=>!c.archived||c.id===cid);
+  show(`<h2>Nuova attività</h2><label>Titolo *</label><input id=tt><label>Cliente</label><select id=tc onchange=refreshTaskProjects()><option value="">Nessuno</option>${clientOptions.map(c=>`<option value="${c.id}" ${cid===c.id?'selected':''}>${esc(c.name)}</option>`).join('')}</select><label>Progetto (facoltativo)</label><select id=tp><option value="">Nessun progetto</option></select><label>Scadenza</label><input type=date id=td><button class=primary onclick=saveTask()>Aggiungi</button>`);
+  setTimeout(()=>{refreshTaskProjects(projectId)},0)
+}
+function refreshTaskProjects(selected=''){
+  const sel=document.getElementById('tp');if(!sel)return;const c=db.clients.find(x=>x.id===tc.value);
+  sel.innerHTML='<option value="">Nessun progetto</option>'+(c?(c.projects||[]).map(p=>`<option value="${p.id}" ${selected===p.id?'selected':''}>${esc(p.name)}</option>`).join(''):'')
+}
+function saveTask(){if(!tt.value.trim())return;db.tasks.push({id:crypto.randomUUID(),title:tt.value,clientId:tc.value,projectId:tp?.value||'',date:td.value,done:false});if(tc.value)logEvent(tc.value,'Creata attività “'+tt.value+'”',tp?.value||'');save();modal.close();cur?renderClient():go('tasks')}
+function toggleTask(id){let t=db.tasks.find(x=>x.id===id);if(!t)return;t.done=!t.done;if(t.clientId)logEvent(t.clientId,(t.done?'Completata':'Riaperta')+' attività “'+t.title+'”',t.projectId||'');save();cur?renderClient():go('tasks')}
 function addDemo(){if(db.clients.length)return;let id=crypto.randomUUID();db.clients.push({id,name:'Studio Demo',contact:'Mario Rossi',phone:'333 1234567',email:'demo@example.it',sector:'Servizi',notes:'Cliente dimostrativo per provare ClientPro.',status:'Analisi',next:'Completare intervista',problems:[{title:'Gestione scorte',description:'Alcuni materiali finiscono senza preavviso.',priority:'Alta',solution:'',status:'Da analizzare'}],projects:[]});db.tasks.push({id:crypto.randomUUID(),title:'Completare intervista',clientId:id,date:'',done:false});logEvent(id,'Cliente demo creato');save()}
 
 const publicId=new URLSearchParams(location.search).get('questionario');
@@ -1404,7 +1678,8 @@ const publicId=new URLSearchParams(location.search).get('questionario');
     await ensureWorkspace();
     await loadCloudState();
   }
-  ensureTimeData();
+
+  ensureAllData();localStorage.setItem(STORE,JSON.stringify(db));
   recoverTimeSession();
 
   appRoutingEnabled=true;
@@ -1425,5 +1700,6 @@ if(backendReady()){
 window.addEventListener('focus',()=>{noteUserActivity();if(backendReady()&&authUser&&!localDirty)syncNow(false)});
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'){closeTimeSession('pagina-nascosta');if(backendReady()&&authUser)saveCloudState(true)}else{syncTimeContext();if(backendReady()&&authUser&&!localDirty)syncNow(false)}});
 window.addEventListener('pagehide',()=>{closeTimeSession('chiusura-pagina');if(backendReady()&&authUser)saveCloudState(true)});
+modal.addEventListener('close',()=>{if(activeProjectId){activeProjectId='';syncTimeContext()}});
 if('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>r.update()).catch(console.warn);
 </script></body></html>

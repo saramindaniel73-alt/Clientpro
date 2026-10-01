@@ -1,4 +1,4 @@
-const CACHE='clientpro-v12-6-tempo-automatico';
+const CACHE='clientpro-v12-7-archivio-storico';
 const STATIC=['/manifest.webmanifest','/icon-192.png','/icon-512.png','/icon-maskable-512.png'];
 self.addEventListener('install',event=>{
   self.skipWaiting();
