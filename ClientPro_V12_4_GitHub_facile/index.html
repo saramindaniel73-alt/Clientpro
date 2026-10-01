@@ -510,6 +510,67 @@ dialog::backdrop{background:rgba(0,0,0,.72);backdrop-filter:blur(4px)}
 @media(max-width:700px){.settingsGrid{grid-template-columns:1fr}.accountText{display:none}.installBtn{font-size:0}.installBtn.show:before{content:"↓";font-size:16px}dialog{width:calc(100vw - 18px);max-height:calc(100dvh - 18px);padding:14px}#modalBody{max-height:calc(100dvh - 46px)}.modalHead{top:-14px;padding-top:4px}.settingBox{padding:13px}}
 </style>
 
+
+<style id="v1252-header-cleanup">
+.themeChoices{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.themeChoices button{min-width:88px}
+.themeChoices button.themeOn{
+  background:linear-gradient(135deg,var(--blue),var(--blue2));
+  border-color:transparent;color:#fff;
+}
+@media(max-width:900px){
+  .top{
+    display:block !important;
+    width:100% !important;
+  }
+  .top>div:first-child{
+    display:block !important;
+    width:100% !important;
+    margin-bottom:10px !important;
+  }
+  .top>div:first-child small{display:none !important}
+  .top h1{
+    white-space:nowrap !important;
+    overflow:visible !important;
+    overflow-wrap:normal !important;
+    word-break:normal !important;
+    font-size:28px !important;
+    line-height:1.08 !important;
+    margin:0 !important;
+  }
+  .top .actions{
+    width:100% !important;
+    display:flex !important;
+    flex-wrap:wrap !important;
+    justify-content:flex-end !important;
+    align-items:center !important;
+    gap:8px !important;
+  }
+  .top .actions .betaBadge{
+    font-size:9px !important;
+    padding:3px 6px !important;
+  }
+  .top .accountBtn{
+    padding:6px !important;
+    min-width:42px !important;
+  }
+  .top .accountBtn .accountText{display:none !important}
+  .top .accountBtn .avatar{margin:0 !important}
+  .top .actions .primary{
+    order:20 !important;
+    flex:1 0 100% !important;
+    width:100% !important;
+    max-width:none !important;
+    min-height:46px !important;
+    font-size:15px !important;
+  }
+  .top .installBtn{display:none !important}
+}
+@media(max-width:420px){
+  .top h1{font-size:26px !important}
+  .mobileBrand{margin-bottom:8px !important}
+}
+</style>
 </head><body>
 <div class="app">
 <aside class="side"><div class="brand click" onclick="go('home')"><div class="mark">CP</div>ClientPro</div><div class="miniLabel">AREA DI LAVORO</div><div class="nav">
@@ -518,8 +579,7 @@ dialog::backdrop{background:rgba(0,0,0,.72);backdrop-filter:blur(4px)}
 <main class="main"><div class="mobileBrand click" onclick="go('home')"><div class="mark">CP</div><b>ClientPro</b></div>
 <div class="top"><div><small id="crumb" class="mut">ClientPro</small><h1 id="title">Dashboard</h1></div><input class="topSearch" placeholder="Cerca clienti, progetti, attività..."><div class="actions">
 <button id="installBtn" class="installBtn" title="Installa ClientPro" onclick="installApp()">↓ <span class="accountText">Installa</span></button>
-<button title="Tema" onclick="toggleTheme()">◐</button>
-<span class="betaBadge" title="Versione installata">v12.5.1</span>
+<span class="betaBadge" title="Versione installata">v12.5.2</span>
 <button class="accountBtn" title="Account e impostazioni" onclick="openAccountSettings()"><span class="avatar" id="accountAvatar">CP</span><span class="accountText" id="accountLabel">Account</span></button>
 <button class="primary" onclick="newClient()">＋ Nuovo cliente</button>
 </div></div><div id="offlineBanner" class="offlineBanner"></div><div id="view"></div></main>
@@ -542,7 +602,7 @@ let deferredInstallPrompt=null;
 let activeView='section';
 let lastSyncAt=null;
 let localDirty=false;
-const APP_VERSION='12.5.1';
+const APP_VERSION='12.5.2';
 
 function syncTimeText(){
   return lastSyncAt ? 'Ultima sincronizzazione: '+lastSyncAt.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'}) : 'Sincronizzazione non ancora completata';
@@ -913,16 +973,21 @@ async function openAccountSettings(){
     <div class="settingsGrid">
       <div class="settingBox"><h3>Account</h3><p>${cloud?(authUser?.email||'Cloud configurato'):'ClientPro è in modalità locale.'}</p>${cloud&&authUser?'<button onclick="doLogout()">Esci dall’account</button>':'<span class="cloudLocal">Cloud non configurato</span>'}</div>
       <div class="settingBox"><h3>Sincronizzazione</h3><p>${cloud?'Clienti, interviste, problemi, progetti, attività e storico vengono sincronizzati nel tuo spazio personale.':'Per usare gli stessi dati su PC e smartphone collega il backend incluso nel pacchetto.'}</p><div class="syncActions"><span class="${cloud?'cloudOk':'cloudLocal'}">${cloud?'● Cloud disponibile':'● Solo dispositivo'}</span>${cloud?'<button onclick="syncNow(true)">Sincronizza ora</button>':''}</div><p class="syncTime" style="margin-top:8px">${syncTimeText()}</p></div>
+      <div class="settingBox"><h3>Aspetto</h3><p>Scegli come visualizzare ClientPro.</p><div class="themeChoices">
+        <button data-theme-choice="dark" onclick="setAppTheme('dark')" class="${(db.theme||'dark')==='dark'?'themeOn':''}">Scuro</button>
+        <button data-theme-choice="light" onclick="setAppTheme('light')" class="${db.theme==='light'?'themeOn':''}">Chiaro</button>
+        <button data-theme-choice="system" onclick="setAppTheme('system')" class="${db.theme==='system'?'themeOn':''}">Sistema</button>
+      </div></div>
       <div class="settingBox"><h3>Backup / esportazione</h3><p>Scarica una copia completa dei tuoi dati ClientPro.</p><button onclick="exportData()">Esporta dati</button></div>
       <div class="settingBox"><h3>Ripristino dati</h3><p>Importa un backup ClientPro precedentemente esportato.</p><input id="importFile" type="file" accept=".json,application/json" onchange="importData(this.files[0])"></div>
       <div class="settingBox"><h3>Installazione</h3><p>Installa ClientPro sul dispositivo per aprirla come una normale app.</p><button onclick="installApp()">Installa app</button></div>
-      <div class="settingBox"><h3>Versione</h3><p>ClientPro Commercial Beta 12.5.1<br>Correzione apertura intervista su PC e ciclo sincronizzazione questionario.</p><span class="betaBadge">COMMERCIAL BETA · v12.5.1.1</span></div>
+      <div class="settingBox"><h3>Versione</h3><p>ClientPro Commercial Beta 12.5.2<br>Ottimizzazione grafica smartphone e impostazioni aspetto.</p><span class="betaBadge">COMMERCIAL BETA · v12.5.2</span></div>
     </div>`);
   requestAnimationFrame(()=>{try{modal.scrollTop=0;modalBody.scrollTop=0}catch(e){}});
 }
 
 function exportData(){
-  const blob=new Blob([JSON.stringify({exportedAt:new Date().toISOString(),version:'12.5.1',data:db},null,2)],{type:'application/json'});
+  const blob=new Blob([JSON.stringify({exportedAt:new Date().toISOString(),version:'12.5.2',data:db},null,2)],{type:'application/json'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='ClientPro_backup_'+new Date().toISOString().slice(0,10)+'.json';a.click();URL.revokeObjectURL(a.href);
 }
 async function importData(file){
@@ -952,8 +1017,18 @@ async function installApp(){
   show(`<h2>Installa ClientPro</h2><p class=mut>${isiOS?'Su iPhone/iPad: apri il menu Condividi di Safari e scegli “Aggiungi alla schermata Home”.':'Se il browser non mostra ancora il pulsante di installazione, apri il menu del browser e scegli “Installa app” oppure “Aggiungi alla schermata Home”.'}</p>`);
 }
 
-function applyTheme(){document.documentElement.classList.toggle('light',db.theme==='light')}
-function toggleTheme(){db.theme=db.theme==='dark'?'light':'dark';save();applyTheme()} applyTheme();
+function applyTheme(){
+  const mode=db.theme||'dark';
+  const useLight=mode==='light'||(mode==='system'&&window.matchMedia&&window.matchMedia('(prefers-color-scheme: light)').matches);
+  document.documentElement.classList.toggle('light',useLight);
+}
+function setAppTheme(mode){
+  if(!['dark','light','system'].includes(mode))mode='dark';
+  db.theme=mode;save();applyTheme();
+  document.querySelectorAll('[data-theme-choice]').forEach(b=>b.classList.toggle('themeOn',b.dataset.themeChoice===mode));
+}
+try{window.matchMedia('(prefers-color-scheme: light)').addEventListener('change',()=>{if(db.theme==='system')applyTheme()})}catch(e){}
+applyTheme();
 function activate(p){document.querySelectorAll('[data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page===p))}
 function go(p,push=true){renderSection(p);if(push)pushRoute({view:'section',page:p})}
 function logEvent(clientId,text){db.history.unshift({id:crypto.randomUUID(),clientId,text,date:new Date().toISOString()});save()}
@@ -1061,7 +1136,7 @@ if(tab==='overview')ct.innerHTML=`<div class=grid4><div class="card stat"><span>
 <div class=card><h3>Storico recente</h3>${hs.length?hs.map(h=>`<div class=item><b>${esc(h.text)}</b><div class=mut>${fmt(h.date)}</div></div>`).join(''):'<div class=mut>Nessun evento.</div>'}</div>`;
 if(tab==='analysis')ct.innerHTML=`<div class=grid2><div class=card><div class="row between"><h2>Intervista digitale</h2><span class="pill blue">${c.interview?interviewProgress(c)+'%':'Non iniziata'}</span></div><p class=mut>Compila direttamente da PC, tablet o telefono con salvataggio automatico.</p><button class=primary onclick="startInterviewForClient('${c.id}')">${c.interview?'Continua intervista':'Inizia intervista'}</button></div>
 <div class=card><div class="row between"><h2>Questionario cliente</h2><span class="pill ${c.questionnaire?.status==='Compilato'?'green':c.questionnaire?.status==='In compilazione'?'orange':c.questionnaire?.status==='Inviato'?'blue':''}">${esc(c.questionnaire?.status||'Non inviato')}</span></div><p class=mut>${questionnaireStatusText(c)}</p><div class=row>${c.questionnaire?.status==='Compilato'?'<button class=primary onclick=viewQuestionnaireAnswers()>Vedi risposte</button>':'<button class=primary onclick=prepareQuestionnaire()>Invia questionario</button>'}<button onclick=previewQuestionnaire()>Anteprima</button></div></div></div>`;
-// V12.5.1: sincronizza il questionario senza ridisegnare continuamente la scheda.
+// V12.5.2: mantiene la sincronizzazione stabile e migliora la testata mobile.
 if(tab==='analysis')setTimeout(()=>syncQuestionnaire(c.id,false),120);
 if(tab==='problems')ct.innerHTML=`<div class="row between"><h3>Problemi da risolvere</h3><button class=primary onclick=newProblem()>＋ Nuovo problema</button></div>${ps.length?ps.map((p,i)=>`<div class="card problem ${p.status==='Risolto'?'resolved':''} click" onclick="openProblem(${i})"><div class="row between"><div><b>${esc(p.title)}</b><div class=mut>${esc(p.description||'')}</div></div><span class=pill>${esc(p.status)}</span></div></div>`).join(''):'<div class="card empty">Nessun problema registrato.</div>'}`;
 if(tab==='projects')ct.innerHTML=`<div class="row between"><h3>Progetti</h3><button class=primary onclick=newProject()>＋ Nuovo progetto</button></div>${prs.length?prs.map(p=>`<div class=card><div class="row between"><div><b>${esc(p.name)}</b><div class=mut>${esc(p.description||'')}</div></div><span class=pill>${esc(p.status)}</span></div></div>`).join(''):'<div class="card empty">Nessun progetto.</div>'}`;
