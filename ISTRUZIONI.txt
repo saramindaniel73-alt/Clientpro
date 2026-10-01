@@ -1,0 +1,19 @@
+CLIENTPRO V12.7 - ARCHIVIO E STORICO LAVORI
+
+Aggiornamento costruito sulla base V12.6.
+
+Sostituisci su GitHub solo:
+- index.html
+- sw.js
+
+NOVITÀ
+- Clienti Attivi / Conclusi
+- Cliente unico con più lavori nel tempo
+- Riattivazione: riprendi progetto, assistenza/modifica, nuovo progetto
+- Consuntivo congelato per ogni chiusura lavoro
+- Storico completo cliente + storico per progetto
+- Indirizzo attività, sede operativa e link mappa
+- Tempo automatico/tariffa V12.6 mantenuti e compatibili
+- Attività collegabili a progetto
+
+La sezione Potenziali clienti NON è inclusa: verrà progettata nel capitolo successivo.

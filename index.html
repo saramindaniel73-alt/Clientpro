@@ -1,0 +1,1705 @@
+<!doctype html>
+<html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ClientPro</title><meta name="theme-color" content="#06101d"><meta name="description" content="ClientPro - gestione clienti, analisi, problemi, progetti e attività"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-192.png">
+
+<style>
+:root{
+  --bg:#07111f;
+  --bg2:#0a1525;
+  --sidebar:#081423;
+  --panel:#0d1b2e;
+  --panel2:#10223a;
+  --panel3:#132845;
+  --line:#1b3552;
+  --text:#f6f8fc;
+  --muted:#8ea3bb;
+  --blue:#2f8cff;
+  --blue2:#1c6eea;
+  --cyan:#25c7ff;
+  --green:#28d39d;
+  --orange:#ffb34d;
+  --red:#ff6375;
+  --purple:#8d7cff;
+  --shadow:0 20px 55px rgba(0,0,0,.32);
+}
+:root.light{
+  --bg:#f4f7fb;--bg2:#eef3f8;--sidebar:#ffffff;
+  --panel:#ffffff;--panel2:#f5f8fb;--panel3:#eef4fa;
+  --line:#dbe4ef;--text:#172236;--muted:#687b91;
+  --shadow:0 18px 42px rgba(28,55,87,.08);
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  min-height:100vh;
+  background:
+    radial-gradient(circle at 92% 0%,rgba(28,111,234,.17),transparent 28%),
+    linear-gradient(180deg,var(--bg),var(--bg2));
+  color:var(--text);
+  font:14px Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+button,input,textarea,select{font:inherit}
+button{
+  border:1px solid var(--line);
+  background:var(--panel2);
+  color:var(--text);
+  border-radius:11px;
+  padding:10px 14px;
+  font-weight:750;
+  cursor:pointer;
+  transition:.18s ease;
+}
+button:hover{transform:translateY(-1px);border-color:#355777}
+button:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.primary{
+  background:linear-gradient(135deg,var(--blue),var(--blue2));
+  border-color:transparent;
+  color:#fff;
+  box-shadow:0 10px 26px rgba(47,140,255,.22);
+}
+.app{
+  display:grid;
+  grid-template-columns:245px minmax(0,1fr);
+  min-height:100vh;
+}
+.side{
+  position:sticky;top:0;height:100vh;
+  background:linear-gradient(180deg,rgba(8,20,35,.98),rgba(7,17,31,.98));
+  border-right:1px solid var(--line);
+  padding:22px 16px;
+  backdrop-filter:blur(16px);
+}
+.brand{
+  display:flex;align-items:center;gap:11px;
+  padding:2px 10px 24px;
+  font-size:20px;font-weight:900;letter-spacing:-.02em;
+}
+.mark{
+  width:36px;height:36px;border-radius:12px;
+  display:grid;place-items:center;color:#fff;
+  background:linear-gradient(145deg,var(--blue),var(--cyan));
+  box-shadow:0 8px 24px rgba(47,140,255,.28);
+}
+.side .miniLabel{
+  font-size:11px;color:#58708b;font-weight:800;letter-spacing:.12em;
+  padding:10px 11px 7px;
+}
+.nav{display:grid;gap:6px}
+.nav button{
+  display:flex;align-items:center;gap:11px;
+  background:transparent;border:0;text-align:left;color:var(--muted);
+  padding:11px 12px;border-radius:11px;font-weight:700;
+}
+.nav button::before{
+  content:"";
+  width:7px;height:7px;border-radius:3px;background:#314a63;
+}
+.nav button.active,.nav button:hover{
+  background:linear-gradient(90deg,rgba(47,140,255,.15),rgba(47,140,255,.03));
+  color:var(--text);
+}
+.nav button.active::before{background:var(--blue);box-shadow:0 0 0 4px rgba(47,140,255,.11)}
+.main{
+  width:100%;max-width:1550px;margin:auto;
+  padding:22px 30px 95px;
+}
+.top{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:16px;margin-bottom:22px;
+}
+.top h1{margin:2px 0 0;font-size:26px;letter-spacing:-.03em}
+.mut{color:var(--muted)}
+.row{display:flex;align-items:center;gap:9px}
+.between{justify-content:space-between}
+.actions{display:flex;align-items:center;gap:8px}
+.topSearch{
+  width:min(460px,40vw);
+  border:1px solid var(--line);
+  background:rgba(13,27,46,.78);
+  border-radius:12px;padding:11px 14px;
+  color:var(--text);outline:none;
+}
+.card{
+  background:
+    linear-gradient(165deg,rgba(18,39,65,.95),rgba(10,25,43,.98));
+  border:1px solid rgba(45,77,110,.74);
+  border-radius:17px;
+  padding:17px;
+  margin-bottom:13px;
+  box-shadow:var(--shadow);
+}
+:root.light .card{background:linear-gradient(165deg,#fff,#f8fbfe)}
+.grid4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.grid2{display:grid;grid-template-columns:1.18fr .82fr;gap:14px}
+.stat{
+  position:relative;overflow:hidden;min-height:122px;
+}
+.stat::after{
+  content:"";position:absolute;right:-28px;top:-28px;width:96px;height:96px;
+  border-radius:50%;background:radial-gradient(circle,rgba(47,140,255,.18),transparent 68%);
+}
+.statTop{display:flex;align-items:center;justify-content:space-between}
+.statIcon{
+  width:38px;height:38px;border-radius:12px;display:grid;place-items:center;
+  font-size:17px;font-weight:900;
+}
+.iBlue{background:rgba(47,140,255,.15);color:#75b8ff}
+.iOrange{background:rgba(255,179,77,.13);color:var(--orange)}
+.iGreen{background:rgba(40,211,157,.13);color:var(--green)}
+.iPurple{background:rgba(141,124,255,.14);color:#ad9fff}
+.stat span{color:var(--muted);font-weight:700}
+.stat b{display:block;font-size:31px;letter-spacing:-.04em;margin-top:10px}
+.stat small{color:var(--muted)}
+.sectionHead{display:flex;align-items:center;justify-content:space-between;margin-bottom:11px}
+.sectionHead h3{margin:0;font-size:15px}
+.list{display:grid;gap:9px}
+.item{
+  background:linear-gradient(180deg,rgba(17,36,58,.86),rgba(14,31,51,.88));
+  border:1px solid var(--line);
+  border-radius:12px;padding:12px;
+}
+:root.light .item{background:var(--panel2)}
+.click{cursor:pointer}
+.click:hover{border-color:#3576b7}
+.pill{
+  font-size:11px;font-weight:850;padding:5px 8px;border-radius:999px;
+  background:rgba(255,255,255,.045);color:var(--muted);border:1px solid rgba(255,255,255,.05)
+}
+.pill.green{color:var(--green);background:rgba(40,211,157,.08)}
+.pill.blue{color:#73b9ff;background:rgba(47,140,255,.09)}
+.pill.orange{color:var(--orange);background:rgba(255,179,77,.08)}
+.pill.red{color:var(--red);background:rgba(255,99,117,.08)}
+.quickActions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.quickAction{
+  min-height:88px;text-align:left;padding:15px;
+  background:linear-gradient(135deg,rgba(47,140,255,.16),rgba(23,54,91,.55));
+  border:1px solid rgba(69,118,170,.4);
+}
+.quickAction strong{display:block;font-size:15px;margin-bottom:5px}
+.quickAction span{display:block;color:var(--muted);font-weight:500;font-size:12px}
+.deadline{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--orange)}
+.activityBar{
+  display:flex;align-items:flex-end;gap:8px;height:105px;padding-top:12px
+}
+.activityBar i{
+  flex:1;border-radius:7px 7px 3px 3px;
+  background:linear-gradient(180deg,var(--blue),rgba(47,140,255,.2));
+  min-height:12px;
+}
+input,textarea,select{
+  width:100%;padding:11px 12px;border-radius:10px;
+  border:1px solid var(--line);background:var(--panel2);
+  color:var(--text);margin:5px 0 11px;outline:none;
+}
+input:focus,textarea:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(47,140,255,.08)}
+textarea{min-height:100px;resize:vertical}.long{min-height:300px}
+label{font-size:12px;color:var(--muted);font-weight:800}
+.empty{text-align:center;padding:30px;color:var(--muted)}
+.tabs{display:flex;gap:7px;overflow:auto;margin:15px 0}
+.tabs button{white-space:nowrap;background:rgba(12,27,46,.7)}
+.tabs button.on{background:linear-gradient(135deg,var(--blue),var(--blue2));border-color:transparent;color:white}
+.problem{border-left:4px solid var(--orange)}
+.problem.resolved{border-left-color:var(--green)}
+.section{font-size:12px;letter-spacing:.1em;color:#72b6ff;font-weight:900;margin:24px 0 8px}
+.qcard{
+  border:1px solid var(--line);border-radius:15px;padding:16px;margin:10px 0;
+  background:linear-gradient(165deg,rgba(16,34,56,.94),rgba(10,24,41,.95))
+}
+:root.light .qcard{background:#fff}
+.qcard h3{font-size:15px;line-height:1.45;margin:0 0 8px}
+.checks{display:flex;flex-wrap:wrap;gap:7px;margin:8px 0}
+.check{display:flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--panel2);border-radius:9px;padding:8px 10px}
+.check input{width:auto;margin:0}
+.progress{height:8px;background:var(--panel2);border-radius:99px;overflow:hidden;margin-top:8px}
+.progress i{display:block;height:100%;background:linear-gradient(90deg,var(--blue),var(--cyan))}
+.sticky{
+  position:sticky;bottom:8px;z-index:5;background:rgba(9,23,39,.94);
+  border:1px solid var(--line);border-radius:14px;padding:10px;
+  display:flex;justify-content:flex-end;gap:8px;backdrop-filter:blur(14px)
+}
+dialog{
+  width:min(650px,94vw);max-height:90vh;overflow:auto;
+  border:1px solid var(--line);border-radius:18px;
+  background:linear-gradient(165deg,var(--panel),var(--bg2));
+  color:var(--text);padding:20px;box-shadow:0 30px 80px rgba(0,0,0,.5)
+}
+dialog::backdrop{background:rgba(0,0,0,.72);backdrop-filter:blur(4px)}
+@media(max-width:560px){
+  .grid4{grid-template-columns:1fr 1fr}.quickActions{grid-template-columns:1fr}
+  .top h1{font-size:22px}.long{min-height:360px}
+  .stat{min-height:112px}.stat b{font-size:28px}
+}
+</style>
+
+<style id="v7-polish">
+.mobileBrand{display:none}
+.dashboardHero{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:16px}
+.dashboardHero h2{margin:0;font-size:20px;letter-spacing:-.02em}
+.dashboardHero p{margin:4px 0 0;color:var(--muted)}
+.dashStat{cursor:pointer;transition:.2s ease;min-height:126px}
+.dashStat:hover{transform:translateY(-2px);border-color:#3a668f}
+.dashStat .statIcon svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.metricDelta{font-size:11px;color:var(--muted);margin-top:4px}
+.analytics3{display:grid;grid-template-columns:.85fr 1.25fr 1fr;gap:14px;margin-top:14px}
+.donutWrap{display:flex;align-items:center;gap:20px;min-height:180px}
+.donut{
+  --done:25%;
+  width:128px;height:128px;border-radius:50%;
+  background:conic-gradient(var(--blue) 0 var(--done), var(--green) var(--done) 62%, var(--orange) 62% 82%, #31445b 82% 100%);
+  position:relative;flex:0 0 auto;
+}
+.donut:after{content:"";position:absolute;inset:19px;border-radius:50%;background:var(--panel)}
+.donutCenter{position:absolute;inset:0;z-index:2;display:grid;place-items:center;text-align:center;font-weight:900}
+.donutCenter small{display:block;color:var(--muted);font-size:10px;font-weight:700}
+.legend{display:grid;gap:9px}.legendRow{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:12px}.legendDot{width:8px;height:8px;border-radius:50%}
+.weekChart{height:150px;display:flex;align-items:flex-end;gap:10px;padding:12px 2px 0}
+.weekCol{flex:1;display:grid;align-items:end;height:100%;gap:7px;text-align:center;color:var(--muted);font-size:10px}
+.weekCol i{display:block;border-radius:7px 7px 3px 3px;background:linear-gradient(180deg,var(--blue),rgba(47,140,255,.14));min-height:12px}
+.deadlineList{display:grid;gap:8px}.deadlineItem{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;padding:10px;border:1px solid var(--line);background:var(--panel2);border-radius:11px}.deadlineDate{width:42px;height:42px;border-radius:10px;background:rgba(47,140,255,.1);display:grid;place-items:center;color:#79baff;font-weight:900;font-size:12px}
+.ctaGrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+.ctaCard{cursor:pointer;position:relative;overflow:hidden;min-height:128px;padding:20px;background:linear-gradient(135deg,rgba(47,140,255,.16),rgba(15,35,59,.95))}
+.ctaCard.secondary{background:linear-gradient(135deg,rgba(40,211,157,.12),rgba(15,35,59,.95))}
+.ctaCard:hover{border-color:#3e6e9b;transform:translateY(-1px)}
+.ctaIcon{width:44px;height:44px;border-radius:13px;display:grid;place-items:center;background:rgba(47,140,255,.14);color:#7abbff;margin-bottom:14px}
+.secondary .ctaIcon{background:rgba(40,211,157,.11);color:var(--green)}
+.ctaIcon svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.ctaCard h3{margin:0 0 5px;font-size:17px}.ctaCard p{margin:0;color:var(--muted);max-width:520px}
+.problemAll{cursor:pointer}
+@media(max-width:1100px){.analytics3{grid-template-columns:1fr 1fr}.analytics3>.card:last-child{grid-column:1/-1}}
+@media(max-width:900px){
+  .main{padding:12px 13px 34px}
+  .mobileBrand{display:flex;align-items:center;gap:9px;margin:2px 0 13px;width:max-content}
+  .mobileBrand .mark{width:32px;height:32px;border-radius:10px;font-size:12px}
+  .top{align-items:flex-start}
+  .topSearch{display:none}
+  .grid4{grid-template-columns:1fr 1fr}
+  .analytics3,.ctaGrid,.grid2{grid-template-columns:1fr}
+  .analytics3>.card:last-child{grid-column:auto}
+  .dashboardHero{align-items:flex-start}
+  .donutWrap{justify-content:center}
+}
+@media(max-width:560px){
+  .top .actions .primary{padding:9px 11px;font-size:12px}
+  .dashboardHero h2{font-size:18px}
+  .card{border-radius:15px}
+  .dashStat{min-height:116px;padding:14px}
+  .statIcon{width:35px;height:35px}
+  .dashStat b{font-size:28px}
+}
+</style>
+
+
+<style id="v8-mobile-fix">
+/* Correzione responsive reale: su smartphone la sidebar non deve occupare spazio */
+@media (max-width:900px){
+  html,body{width:100%;max-width:100%;overflow-x:hidden}
+  .app{
+    display:block !important;
+    width:100% !important;
+    min-width:0 !important;
+  }
+  .side{
+    display:none !important;
+    width:0 !important;
+  }
+  .main{
+    width:100% !important;
+    max-width:none !important;
+    min-width:0 !important;
+    margin:0 !important;
+    padding:12px 14px 32px !important;
+  }
+
+  .mobileBrand{
+    display:flex !important;
+    align-items:center;
+    gap:9px;
+    margin:2px 0 12px;
+    width:max-content;
+  }
+
+  .top{
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) auto;
+    align-items:start !important;
+    gap:10px;
+    width:100%;
+  }
+  .top>div:first-child{min-width:0}
+  .top h1{
+    font-size:22px !important;
+    white-space:normal;
+    overflow-wrap:anywhere;
+  }
+  .top .actions{
+    flex-shrink:0;
+    justify-self:end;
+  }
+  .topSearch{display:none !important}
+  .top .actions .primary{
+    white-space:nowrap;
+    max-width:150px;
+  }
+
+  .dashboardHero{
+    width:100%;
+    margin:4px 0 14px;
+  }
+  .dashboardHero h2{font-size:20px}
+  .dashboardHero p{
+    max-width:34rem;
+    line-height:1.45;
+  }
+
+  .grid4{
+    width:100%;
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    gap:10px !important;
+  }
+  .dashStat{
+    min-width:0 !important;
+    width:100%;
+    min-height:124px !important;
+    padding:14px !important;
+    overflow:hidden;
+  }
+  .dashStat .statTop{
+    align-items:flex-start;
+    gap:7px;
+  }
+  .dashStat .statTop>span{
+    min-width:0;
+    font-size:13px;
+    line-height:1.25;
+    overflow-wrap:normal;
+    word-break:normal;
+  }
+  .dashStat .statIcon{
+    width:34px !important;
+    height:34px !important;
+    flex:0 0 34px;
+  }
+  .dashStat .statIcon svg{
+    width:18px !important;
+    height:18px !important;
+  }
+  .dashStat b{
+    font-size:30px !important;
+    margin-top:10px !important;
+  }
+  .metricDelta{
+    font-size:11px;
+    line-height:1.25;
+    overflow-wrap:normal;
+    word-break:normal;
+  }
+
+  .analytics3,.ctaGrid,.grid2{
+    width:100%;
+    grid-template-columns:1fr !important;
+  }
+  .analytics3>.card:last-child{grid-column:auto !important}
+  .card{min-width:0}
+  .donutWrap{
+    justify-content:center;
+    flex-wrap:wrap;
+  }
+  .weekChart{min-width:0}
+}
+
+@media (max-width:430px){
+  .main{padding:10px 11px 28px !important}
+  .top .actions button:first-child{display:none}
+  .top .actions .primary{
+    max-width:none;
+    padding:9px 10px !important;
+    font-size:11px !important;
+  }
+  .dashboardHero h2{font-size:19px !important}
+  .dashboardHero p{font-size:13px}
+  .grid4{gap:8px !important}
+  .dashStat{
+    min-height:112px !important;
+    padding:12px !important;
+    border-radius:14px !important;
+  }
+  .dashStat .statTop>span{font-size:12px}
+  .dashStat .statIcon{
+    width:30px !important;
+    height:30px !important;
+    flex-basis:30px;
+  }
+  .dashStat b{font-size:27px !important;margin-top:8px !important}
+  .metricDelta{
+    font-size:10px;
+    max-width:100%;
+  }
+}
+
+@media (max-width:350px){
+  .grid4{grid-template-columns:1fr !important}
+  .dashStat{min-height:105px !important}
+}
+</style>
+
+
+<style id="v9-icon-fix">
+/* Le icone della dashboard sono vere aree cliccabili, senza cambiare la grafica approvata */
+.dashboardIconBtn{
+  width:100%;
+  height:100%;
+  padding:0;
+  border:0;
+  background:transparent;
+  color:inherit;
+  display:grid;
+  place-items:center;
+  border-radius:inherit;
+  cursor:pointer;
+}
+.dashboardIconBtn:hover{transform:none;border:0}
+.statIcon{padding:0 !important;overflow:hidden}
+.statIcon svg,.ctaIcon svg{pointer-events:none}
+.ctaIcon{padding:0 !important;overflow:hidden}
+.ctaIcon .dashboardIconBtn{border-radius:13px}
+.donutHit{cursor:pointer}
+.questionnaireHit{cursor:pointer}
+.dashboardClickable{cursor:pointer}
+@media(max-width:900px){
+  .statIcon,.ctaIcon{touch-action:manipulation}
+  .dashboardIconBtn{min-width:100%;min-height:100%}
+}
+</style>
+
+
+<style id="v12-product">
+.offlineBanner{
+  display:none;margin:0 0 14px;padding:10px 13px;border:1px solid rgba(255,179,77,.32);
+  background:rgba(255,179,77,.08);border-radius:12px;color:var(--orange);font-size:12px;font-weight:750
+}
+.offlineBanner.show{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.accountBtn{display:inline-flex;align-items:center;gap:8px}
+.avatar{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,var(--blue),var(--cyan));color:white;font-size:11px;font-weight:900}
+.installBtn{display:none}
+.installBtn.show{display:inline-flex}
+.authShell{
+  min-height:100vh;display:grid;place-items:center;padding:24px;
+  background:radial-gradient(circle at 80% 0%,rgba(47,140,255,.18),transparent 30%),linear-gradient(180deg,#06101d,#091625)
+}
+.authCard{
+  width:min(460px,100%);padding:26px;border-radius:22px;border:1px solid var(--line);
+  background:linear-gradient(165deg,rgba(15,34,57,.98),rgba(8,22,38,.99));box-shadow:0 30px 80px rgba(0,0,0,.45)
+}
+.authBrand{display:flex;align-items:center;gap:11px;margin-bottom:20px;font-size:22px;font-weight:900}
+.authCard h1{margin:0 0 6px;font-size:26px}.authCard p{color:var(--muted);line-height:1.5}
+.authTabs{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:18px 0}
+.authTabs button.on{background:var(--blue);border-color:var(--blue);color:#fff}
+.authMsg{min-height:20px;color:var(--orange);font-size:12px;margin:3px 0 8px}
+.settingsGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.settingBox{border:1px solid var(--line);background:var(--panel2);padding:14px;border-radius:12px}
+.settingBox h3{margin:0 0 5px;font-size:14px}.settingBox p{margin:0 0 11px;color:var(--muted);font-size:12px;line-height:1.45}
+.cloudOk{color:var(--green)}.cloudLocal{color:var(--orange)}
+.syncDot{width:8px;height:8px;border-radius:50%;background:var(--muted);display:inline-block}
+.syncDot.saving{background:var(--orange)}.syncDot.ok{background:var(--green)}.syncDot.error{background:var(--red)}
+.betaBadge{font-size:10px;font-weight:900;letter-spacing:.08em;color:#87bcff;border:1px solid rgba(47,140,255,.22);background:rgba(47,140,255,.08);border-radius:999px;padding:4px 7px}
+#modalBody{max-height:calc(90vh - 40px);overflow:auto;-webkit-overflow-scrolling:touch}
+.modalHead{position:sticky;top:-20px;z-index:10;display:flex;align-items:center;justify-content:space-between;gap:12px;background:linear-gradient(165deg,var(--panel),var(--bg2));padding:4px 0 12px;margin-bottom:4px}
+.modalHead h2{margin:0}.modalClose{min-width:42px;padding:8px 11px;font-size:18px}
+.syncActions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.syncTime{font-size:11px;color:var(--muted)}
+@media(max-width:700px){.settingsGrid{grid-template-columns:1fr}.accountText{display:none}.installBtn{font-size:0}.installBtn.show:before{content:"↓";font-size:16px}dialog{width:calc(100vw - 18px);max-height:calc(100dvh - 18px);padding:14px}#modalBody{max-height:calc(100dvh - 46px)}.modalHead{top:-14px;padding-top:4px}.settingBox{padding:13px}}
+</style>
+
+
+<style id="v1252-header-cleanup">
+.themeChoices{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.themeChoices button{min-width:88px}
+.themeChoices button.themeOn{
+  background:linear-gradient(135deg,var(--blue),var(--blue2));
+  border-color:transparent;color:#fff;
+}
+@media(max-width:900px){
+  .top{
+    display:block !important;
+    width:100% !important;
+  }
+  .top>div:first-child{
+    display:block !important;
+    width:100% !important;
+    margin-bottom:10px !important;
+  }
+  .top>div:first-child small{display:none !important}
+  .top h1{
+    white-space:nowrap !important;
+    overflow:visible !important;
+    overflow-wrap:normal !important;
+    word-break:normal !important;
+    font-size:28px !important;
+    line-height:1.08 !important;
+    margin:0 !important;
+  }
+  .top .actions{
+    width:100% !important;
+    display:flex !important;
+    flex-wrap:wrap !important;
+    justify-content:flex-end !important;
+    align-items:center !important;
+    gap:8px !important;
+  }
+  .top .actions .betaBadge{
+    font-size:9px !important;
+    padding:3px 6px !important;
+  }
+  .top .accountBtn{
+    padding:6px !important;
+    min-width:42px !important;
+  }
+  .top .accountBtn .accountText{display:none !important}
+  .top .accountBtn .avatar{margin:0 !important}
+  .top .actions .primary{
+    order:20 !important;
+    flex:1 0 100% !important;
+    width:100% !important;
+    max-width:none !important;
+    min-height:46px !important;
+    font-size:15px !important;
+  }
+  .top .installBtn{display:none !important}
+}
+@media(max-width:420px){
+  .top h1{font-size:26px !important}
+  .mobileBrand{margin-bottom:8px !important}
+}
+</style>
+
+<style id="v127-archive-history">
+.clientListTabs{display:flex;gap:8px;margin:0 0 12px;flex-wrap:wrap}
+.clientListTabs button.on{background:linear-gradient(135deg,var(--blue),var(--blue2));border-color:transparent;color:#fff}
+.addressLine{display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap;margin-top:7px;color:var(--muted)}
+.addressLine a{color:#79baff;text-decoration:none;font-weight:800}
+.addressLine a:hover{text-decoration:underline}
+.archiveBadge{color:#a9b7c6;background:rgba(142,163,187,.1)}
+.projectCard{cursor:pointer}
+.projectCard:hover{border-color:#3576b7}
+.projectMeta{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}
+.summaryGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin:10px 0}
+.summaryBox{padding:11px;border:1px solid var(--line);border-radius:11px;background:var(--panel2)}
+.summaryBox small{display:block;color:var(--muted);font-weight:700;margin-bottom:5px}
+.summaryBox b{font-size:16px}
+.closureCard{border-left:4px solid var(--green)}
+.historyProject{border-left:4px solid var(--blue)}
+.dangerBtn{border-color:rgba(255,99,117,.35)!important;color:#ff8f9c!important}
+.softActions{display:flex;gap:8px;flex-wrap:wrap}
+.moneyGood{color:var(--green);font-weight:850}
+@media(max-width:760px){
+ .summaryGrid{grid-template-columns:1fr 1fr}
+ .softActions{display:grid;grid-template-columns:1fr}
+}
+@media(max-width:460px){.summaryGrid{grid-template-columns:1fr}}
+</style>
+<style id="v126-time-tracking">
+.timeSummary{display:grid;grid-template-columns:minmax(190px,.8fr) 1.2fr;gap:12px;margin-bottom:12px}
+.timeTotal{font-size:30px;font-weight:900;margin:5px 0}.timeValue{color:var(--green);font-weight:850}
+.timeBreakdown{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px}
+.timeBreakdown .item{margin:0;padding:10px 12px}.rateRow{display:flex;align-items:center;gap:8px;margin-top:10px}.rateRow input{max-width:120px}
+@media(max-width:700px){.timeSummary{grid-template-columns:1fr}.timeBreakdown{grid-template-columns:1fr}.timeTotal{font-size:27px}}
+</style>
+
+</head><body>
+<div class="app">
+<aside class="side"><div class="brand click" onclick="go('home')"><div class="mark">CP</div>ClientPro</div><div class="miniLabel">AREA DI LAVORO</div><div class="nav">
+<button data-page="home" onclick="go('home')">⌂ &nbsp; Home</button><button data-page="clients" onclick="dashboardGo('clients')">♙ &nbsp; Clienti</button><button data-page="analysis" onclick="go('analysis')">◎ &nbsp; Analisi</button><button data-page="projects" onclick="dashboardGo('projects')">▣ &nbsp; Progetti</button><button data-page="tasks" onclick="dashboardGo('tasks')">✓ &nbsp; Attività</button>
+</div></aside>
+<main class="main"><div class="mobileBrand click" onclick="go('home')"><div class="mark">CP</div><b>ClientPro</b></div>
+<div class="top"><div><small id="crumb" class="mut">ClientPro</small><h1 id="title">Dashboard</h1></div><input class="topSearch" placeholder="Cerca clienti, progetti, attività..."><div class="actions">
+<button id="installBtn" class="installBtn" title="Installa ClientPro" onclick="installApp()">↓ <span class="accountText">Installa</span></button>
+<span class="betaBadge" title="Versione installata">v12.7</span>
+<button class="accountBtn" title="Account e impostazioni" onclick="openAccountSettings()"><span class="avatar" id="accountAvatar">CP</span><span class="accountText" id="accountLabel">Account</span></button>
+<button class="primary" onclick="newClient()">＋ Nuovo cliente</button>
+</div></div><div id="offlineBanner" class="offlineBanner"></div><div id="view"></div></main>
+</div>
+
+<dialog id="modal"><div id="modalBody"></div></dialog>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script>
+const INTERVIEW=[["1. CONOSCERE L'ATTIVITÀ", [{"n": 1, "q": "Raccontami come si svolge una normale giornata di lavoro, dall'apertura alla chiusura.", "type": "long", "hint": "Annota le attività principali, l'ordine in cui vengono svolte, chi se ne occupa e gli strumenti utilizzati."}]], ["2. ORGANIZZAZIONE GENERALE", [{"n": 2, "q": "Come sono suddivisi i compiti tra titolare e collaboratori?", "type": "text"}, {"n": 3, "q": "Quali strumenti utilizzate oggi per organizzare il lavoro?", "type": "multi", "options": ["Agenda cartacea", "WhatsApp/chat", "Calendario digitale", "Fogli/Excel", "Gestionale", "Altro"]}, {"n": 4, "q": "Se il titolare o il responsabile non fosse presente, cosa diventerebbe più difficile da gestire?", "type": "text"}, {"n": 5, "q": "Quali sono le cose che ti fanno perdere più tempo durante la settimana?", "type": "text"}]], ["3. PROBLEMI E ATTIVITÀ QUOTIDIANE", [{"n": 6, "q": "Quali problemi si ripetono più frequentemente?", "type": "text"}, {"n": 7, "q": "Quali cose capita più spesso di dimenticare?", "type": "text"}, {"n": 8, "q": "C'è qualcosa che fai ancora a memoria, su carta o tramite messaggi e che vorresti gestire meglio?", "type": "text"}, {"n": 9, "q": "Quando c'è molto lavoro, cosa diventa più difficile da gestire?", "type": "text"}, {"n": 10, "q": "Pensa all'ultima volta che qualcosa nella gestione è andato storto: cosa è successo e come avete risolto?", "type": "text"}]], ["4. APPUNTAMENTI, CLIENTI E ORGANIZZAZIONE", [{"n": 11, "q": "Gestite appuntamenti o prenotazioni?", "type": "single", "options": ["Sì", "No", "Solo in alcuni casi"]}, {"n": 12, "q": "Se sì, come vengono presi, modificati e confermati gli appuntamenti?", "type": "multi", "options": ["Agenda cartacea", "WhatsApp/chat", "Telefono", "Calendario digitale", "Gestionale", "Altro"]}, {"n": 13, "q": "Quali problemi capitano con appuntamenti o prenotazioni?", "type": "multi", "options": ["Nessuno", "Sovrapposizioni", "Cancellazioni", "No-show", "Ritardi", "Dimenticanze", "Altro"]}, {"n": 14, "q": "Come vengono raccolte e ritrovate le informazioni necessarie sul cliente?", "type": "text"}, {"n": 15, "q": "Ci sono lavori, materiali o attività da preparare prima dell'appuntamento? Come ricordate cosa deve essere pronto?", "type": "text"}]], ["5. MATERIALI, SCORTE E FORNITORI", [{"n": 16, "q": "Come gestite attualmente materiali e scorte?", "type": "multi", "options": ["A memoria", "Controllo visivo", "Carta", "Foglio/Excel", "App/gestionale", "Altro"]}, {"n": 17, "q": "Come vi accorgete che un prodotto o materiale sta finendo?", "type": "text"}, {"n": 18, "q": "Vi è mai capitato di rimanere senza qualcosa di necessario?", "type": "single", "options": ["Mai", "Raramente", "Qualche volta", "Spesso"]}, {"n": 19, "q": "I collaboratori hanno materiali personali o assegnati individualmente?", "type": "single", "options": ["Sì", "No", "In parte", "Non applicabile"]}, {"n": 20, "q": "Come vengono effettuati gli ordini ai fornitori?", "type": "text"}, {"n": 21, "q": "Ci sono prodotti per cui dovete controllare scadenza, lotto, quantità minima o altre informazioni?", "type": "single", "options": ["Sì", "No", "Solo alcuni", "Non applicabile"]}]], ["6. PAGAMENTI, COLLABORATORI E INFORMAZIONI", [{"n": 22, "q": "Gestite caparre, acconti o pagamenti anticipati?", "type": "single", "options": ["Sì", "No", "Solo in alcuni casi"]}, {"n": 23, "q": "Come controllate ciò che è stato pagato e ciò che resta da pagare?", "type": "text"}, {"n": 24, "q": "Come vengono organizzati collaboratori, turni e postazioni di lavoro?", "type": "text"}, {"n": 25, "q": "Quali informazioni devono poter vedere tutti e quali invece solo il titolare o determinate persone?", "type": "text"}, {"n": 26, "q": "Come vi scambiate le informazioni importanti durante la giornata?", "type": "multi", "options": ["A voce", "WhatsApp/chat", "Agenda", "Note", "E-mail", "Gestionale", "Altro"]}]], ["7. STRUMENTI E POSSIBILI MIGLIORAMENTI", [{"n": 27, "q": "Quali strumenti o applicazioni utilizzate già? Cosa funziona bene e cosa invece vi crea difficoltà?", "type": "text"}, {"n": 28, "q": "Su quali dispositivi sarebbe più comodo utilizzare un eventuale strumento digitale?", "type": "multi", "options": ["Smartphone", "Tablet", "PC", "Più dispositivi"]}, {"n": 29, "q": "Quali informazioni sull'andamento dell'attività vorresti conoscere più facilmente?", "type": "text"}, {"n": 30, "q": "Qual è una cosa che oggi funziona bene e che non vorresti cambiare?", "type": "text"}, {"n": 31, "q": "C'è qualcosa che non ti ho chiesto ma che crea difficoltà nella gestione quotidiana?", "type": "text"}]], ["8. PRIORITÀ", [{"n": 32, "q": "Se potessi eliminare soltanto tre problemi dalla gestione dell'attività, quali sceglieresti?", "type": "triple"}, {"n": 33, "q": "Se una soluzione digitale potesse risolvere perfettamente una sola cosa, quale dovrebbe essere?", "type": "text"}]]];
+const SELFQ=[{"n": 1, "q": "Quante persone lavorano normalmente nell'attività?", "type": "single", "options": ["1", "2–3", "4–6", "7–10", "Più di 10"]}, {"n": 2, "q": "Come sono organizzati i ruoli?", "type": "single", "options": ["Ognuno ha compiti abbastanza precisi", "Ci dividiamo i compiti in base alla giornata", "Una persona coordina quasi tutto", "Un po' di tutte queste situazioni", "Altro"]}, {"n": 3, "q": "Raccontaci brevemente come si svolge una normale giornata di lavoro, dall'apertura alla chiusura.", "type": "long"}, {"n": 4, "q": "Cosa utilizzate oggi per organizzare il lavoro?", "type": "multi", "options": ["Carta/agenda", "WhatsApp/chat", "Calendario digitale", "Excel/fogli", "Gestionale/app", "Memoria", "Altro"]}, {"n": 5, "q": "Quali attività vi fanno perdere più tempo?", "type": "text"}, {"n": 6, "q": "Cosa capita più facilmente di dimenticare o controllare in ritardo?", "type": "text"}, {"n": 7, "q": "Quando c'è molto lavoro, cosa diventa più difficile da gestire?", "type": "multi", "options": ["Appuntamenti", "Clienti", "Collaboratori", "Materiali", "Comunicazioni", "Pagamenti", "Preparazione del lavoro", "Altro"]}, {"n": 8, "q": "Gestite appuntamenti o prenotazioni?", "type": "single", "options": ["Sì", "No"]}, {"n": 9, "q": "Come li gestite?", "type": "multi", "options": ["Agenda", "WhatsApp/chat", "Telefono", "Calendario digitale", "Gestionale/app", "Altro"]}, {"n": 10, "q": "Quali problemi capitano?", "type": "multi", "options": ["Nessuno", "Cancellazioni", "Clienti che non si presentano", "Ritardi", "Sovrapposizioni", "Dimenticanze", "Informazioni mancanti", "Altro"]}, {"n": 11, "q": "Prima di un appuntamento dovete preparare materiali, informazioni o altro?", "type": "single", "options": ["Mai", "A volte", "Spesso", "Sempre"]}, {"n": 12, "q": "Come controllate oggi quello che avete disponibile?", "type": "multi", "options": ["A vista", "A memoria", "Carta", "Excel/foglio digitale", "App/gestionale", "Non abbiamo un sistema preciso", "Altro"]}, {"n": 13, "q": "Come capite quando qualcosa sta per finire?", "type": "multi", "options": ["Controllo periodico", "Ce ne accorgiamo utilizzandolo", "Una persona controlla", "Avviso automatico", "Non abbiamo un metodo preciso", "Altro"]}, {"n": 14, "q": "Negli ultimi mesi vi è capitato di rimanere senza qualcosa di necessario?", "type": "single", "options": ["Mai", "Una volta", "Qualche volta", "Spesso"]}, {"n": 15, "q": "Avete materiali comuni e materiali personali dei singoli collaboratori?", "type": "single", "options": ["Solo comuni", "Comuni + personali", "Solo personali", "Non applicabile"]}, {"n": 16, "q": "Chi può prendere o utilizzare i materiali?", "type": "single", "options": ["Tutti", "Solo alcune persone", "Dipende dal materiale"]}, {"n": 17, "q": "Come fate gli ordini ai fornitori?", "type": "multi", "options": ["Una persona controlla e ordina", "Lista cartacea", "Messaggi", "Excel", "Gestionale", "Quando qualcuno si accorge che manca qualcosa", "Altro"]}, {"n": 18, "q": "Ci sono informazioni sui prodotti che sarebbe utile controllare?", "type": "multi", "options": ["Quantità", "Scorta minima", "Scadenza", "Lotto", "Fornitore", "Prezzo", "Ultimo acquisto", "Altro"]}, {"n": 19, "q": "Come vi scambiate le informazioni importanti?", "type": "multi", "options": ["A voce", "WhatsApp/chat", "Carta/note", "Calendario", "Gestionale", "Altro"]}, {"n": 20, "q": "Capita che un'informazione non arrivi alla persona giusta?", "type": "single", "options": ["Mai", "Raramente", "A volte", "Spesso"]}, {"n": 21, "q": "Se il titolare/responsabile non fosse presente per qualche giorno, ci sarebbero cose difficili da gestire?", "type": "single", "options": ["No", "Qualcuna", "Diverse", "Molte"]}, {"n": 22, "q": "Gestite caparre, acconti o pagamenti da controllare?", "type": "single", "options": ["Sì", "No"]}, {"n": 23, "q": "Avete scadenze periodiche da ricordare?", "type": "single", "options": ["Sì", "No"]}, {"n": 24, "q": "Pensa all'ultima volta che qualcosa nell'organizzazione non ha funzionato come avrebbe dovuto. Cosa è successo?", "type": "long"}, {"n": 25, "q": "Quanto spesso si verificano problemi simili?", "type": "single", "options": ["Raramente", "Qualche volta al mese", "Ogni settimana", "Quasi ogni giorno"]}, {"n": 26, "q": "Generalmente questi problemi provocano:", "type": "multi", "options": ["Perdita di tempo", "Errori", "Stress organizzativo", "Spese aggiuntive", "Problemi con clienti", "Nessuna conseguenza importante", "Altro"]}, {"n": 27, "q": "Se potessi migliorare TRE cose nella gestione dell'attività, quali sarebbero?", "type": "triple"}, {"n": 28, "q": "Se uno strumento digitale potesse risolvere perfettamente UNA sola cosa, cosa vorresti che facesse?", "type": "long"}, {"n": 29, "q": "Qual è invece una cosa che oggi funziona bene e che NON vorresti cambiare?", "type": "text"}, {"n": 30, "q": "C'è qualcosa di importante sulla gestione della tua attività che non ti abbiamo chiesto?", "type": "text"}];
+const STORE='clientpro_v3';
+let db=JSON.parse(localStorage.getItem(STORE)||'null')||{theme:'dark',clients:[],tasks:[],history:[],timeEntries:[]};
+let authUser=null;
+let workspaceId=null;
+let cloudSaveTimer=null;
+let cloudSaveRunning=false;
+let suppressCloudSave=false;
+let deferredInstallPrompt=null;
+let activeView='section';
+let lastSyncAt=null;
+let localDirty=false;
+const APP_VERSION='12.7';
+
+function syncTimeText(){
+  return lastSyncAt ? 'Ultima sincronizzazione: '+lastSyncAt.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'}) : 'Sincronizzazione non ancora completata';
+}
+function setSyncState(state){
+  const b=document.getElementById('offlineBanner');
+  if(!b)return;
+  if(!backendReady()){
+    b.className='offlineBanner show';
+    b.innerHTML='<span>● Modalità locale: i dati sono salvati solo su questo dispositivo.</span><button onclick="openAccountSettings()">Configura cloud</button>';
+    return;
+  }
+  if(!authUser){
+    b.className='offlineBanner show';
+    b.innerHTML='<span><i class="syncDot error"></i> Sessione non attiva</span><button onclick="location.reload()">Accedi di nuovo</button>';
+    return;
+  }
+  const labels={saving:'Sincronizzazione…',ok:'Dati sincronizzati',error:'Errore di sincronizzazione'};
+  b.className='offlineBanner show';
+  const retry=state==='error'?'<button onclick="syncNow(true)">Riprova</button>':'<button onclick="syncNow(true)">Sincronizza ora</button>';
+  b.innerHTML=`<div class="syncActions"><span><i class="syncDot ${state}"></i> ${labels[state]||'Cloud attivo'} · ${authUser.email||''}</span><span class="syncTime">${syncTimeText()}</span>${retry}</div><span class="betaBadge">v${APP_VERSION}</span>`;
+}
+async function recoverCloudSession(){
+  if(!backendReady())return false;
+  try{
+    const {data,error}=await SB.auth.getSession();
+    if(error)throw error;
+    if(data?.session){authUser=data.session.user;return true}
+    const refreshed=await SB.auth.refreshSession();
+    if(refreshed.error||!refreshed.data?.session)throw (refreshed.error||new Error('Sessione scaduta'));
+    authUser=refreshed.data.session.user;
+    return true;
+  }catch(e){
+    console.error('Sessione cloud non valida',e);
+    authUser=null;
+    setSyncState('error');
+    return false;
+  }
+}
+function updateAccountUI(){
+  const label=document.getElementById('accountLabel');
+  const avatar=document.getElementById('accountAvatar');
+  if(label)label.textContent=authUser?.email?authUser.email.split('@')[0]:'Account';
+  if(avatar){
+    const s=(authUser?.email||'Client Pro').split('@')[0].replace(/[^a-zA-Z0-9 ]/g,' ');
+    avatar.textContent=(s.split(' ').filter(Boolean).map(x=>x[0]).join('').slice(0,2)||'CP').toUpperCase();
+  }
+}
+function serializeState(){
+  return JSON.parse(JSON.stringify(db));
+}
+async function ensureWorkspace(){
+  if(!backendReady()||!authUser)return null;
+  const {data,error}=await SB.rpc('cp_bootstrap_workspace',{p_name:'Il mio spazio ClientPro'});
+  if(error){console.error(error);setSyncState('error');return null}
+  workspaceId=Array.isArray(data)?data[0]?.workspace_id:data?.workspace_id||data;
+  return workspaceId;
+}
+async function loadCloudState(force=false){
+  if(!backendReady()||!authUser)return false;
+  if((localDirty||cloudSaveRunning)&&!force)return false;
+  if(!workspaceId)await ensureWorkspace();
+  if(!workspaceId)return false;
+  setSyncState('saving');
+  const {data,error}=await SB.rpc('cp_load_workspace_state',{p_workspace_id:workspaceId});
+  if(error){
+    console.error(error);
+    if(String(error.code||'')==='42501'||/401|jwt|token|auth/i.test(error.message||''))await recoverCloudSession();
+    setSyncState('error');return false
+  }
+  const row=Array.isArray(data)?data[0]:data;
+  let pendingTimeMerged=0;
+  if(row?.payload&&Object.keys(row.payload).length){
+    suppressCloudSave=true;
+    const localTheme=db.theme;
+    db=row.payload;
+    if(!db.theme)db.theme=localTheme||'dark';
+    const beforeMigration=JSON.stringify(db);
+    ensureAllData();
+    const dataMigrated=beforeMigration!==JSON.stringify(db);
+    pendingTimeMerged=mergePendingTimeEntries();
+    localStorage.setItem(STORE,JSON.stringify(db));
+    suppressCloudSave=false;
+    localDirty=pendingTimeMerged>0||dataMigrated;
+  }else{
+    ensureAllData();
+    await saveCloudState(true);
+  }
+  lastSyncAt=new Date();
+  setSyncState('ok');
+  if(pendingTimeMerged||localDirty)await saveCloudState(true);
+  return true;
+}
+function scheduleCloudSave(){
+  if(suppressCloudSave||!backendReady()||!authUser||!workspaceId)return;
+  clearTimeout(cloudSaveTimer);
+  setSyncState('saving');
+  cloudSaveTimer=setTimeout(()=>saveCloudState(false),650);
+}
+async function saveCloudState(force=false){
+  if(cloudSaveRunning||!backendReady()||!authUser||!workspaceId)return false;
+  cloudSaveRunning=true;
+  const payload=serializeState();
+  const {error}=await SB.rpc('cp_save_workspace_state',{p_workspace_id:workspaceId,p_payload:payload});
+  cloudSaveRunning=false;
+  if(error){
+    console.error(error);
+    if(String(error.code||'')==='42501'||/401|jwt|token|auth/i.test(error.message||''))await recoverCloudSession();
+    setSyncState('error');return false
+  }
+  localDirty=false;
+  clearSyncedPendingTime(payload);
+  lastSyncAt=new Date();
+  setSyncState('ok');
+  return true;
+}
+async function syncNow(manual=false){
+  if(!backendReady())return false;
+  if(!authUser && !(await recoverCloudSession())){if(manual)alert('La sessione è scaduta. Ricarica ClientPro e accedi di nuovo.');return false}
+  if(localDirty){
+    const saved=await saveCloudState(true);
+    if(!saved)return false;
+  }
+  const loaded=await loadCloudState(true);
+  if(loaded){
+    applyTheme();
+    if(activeView==='client'&&cur?.id){const id=cur.id, t=tab;cur=db.clients.find(c=>c.id===id)||null;if(cur)openClient(id,t,false);else go('clients',false)}
+    else if(activeView==='interview'&&cur?.id){const id=cur.id;cur=db.clients.find(c=>c.id===id)||null;if(cur)renderInterview();else go('clients',false)}
+    else if(activeView==='section')renderSection(document.querySelector('[data-page].active')?.dataset.page||'home');
+  }
+  return loaded;
+}
+
+
+
+const ONLINE_CFG=window.CLIENTPRO_CONFIG||{};
+const SB=(ONLINE_CFG.supabaseUrl&&ONLINE_CFG.supabaseAnonKey&&window.supabase)
+  ? window.supabase.createClient(ONLINE_CFG.supabaseUrl,ONLINE_CFG.supabaseAnonKey)
+  : null;
+
+function backendReady(){return !!SB}
+function ownerSecret(){
+  let s=localStorage.getItem('clientpro_owner_secret');
+  if(!s){s=crypto.randomUUID()+crypto.randomUUID();localStorage.setItem('clientpro_owner_secret',s)}
+  return s;
+}
+function publicBaseUrl(){
+  if(ONLINE_CFG.publicBaseUrl) return ONLINE_CFG.publicBaseUrl.replace(/\/$/,'');
+  if(location.protocol==='http:'||location.protocol==='https:') return location.origin+location.pathname;
+  return '';
+}
+function ensureQuestionnaireLocal(c){
+  c.questionnaire=c.questionnaire||{status:'Non inviato',answers:{},notes:{}};
+  c.questionnaire.answers=c.questionnaire.answers||{};
+  c.questionnaire.notes=c.questionnaire.notes||{};
+  if(!c.questionnaire.token)c.questionnaire.token=crypto.randomUUID();
+  save();
+  return c.questionnaire;
+}
+async function createOnlineQuestionnaire(c){
+  const q=ensureQuestionnaireLocal(c);
+  if(!backendReady())return {ok:false,reason:'backend'};
+  const {error}=await SB.rpc('cp_create_questionnaire_link',{
+    p_token:q.token,
+    p_owner_secret:ownerSecret(),
+    p_client_ref:c.id,
+    p_client_name:c.name,
+    p_contact_name:c.contact||''
+  });
+  if(error){console.error(error);return {ok:false,reason:error.message}}
+  return {ok:true};
+}
+async function markQuestionnaireSent(c){
+  const q=ensureQuestionnaireLocal(c);
+  q.status='Inviato';q.sentAt=new Date().toISOString();save();
+  logEvent(c.id,'Questionario inviato');
+  if(backendReady()){
+    const {error}=await SB.rpc('cp_mark_questionnaire_sent',{p_token:q.token,p_owner_secret:ownerSecret()});
+    if(error)console.error(error);
+  }
+}
+async function syncQuestionnaire(clientId,rerender=true){
+  const c=db.clients.find(x=>x.id===clientId);
+  if(!c?.questionnaire?.token||!backendReady())return false;
+  const {data,error}=await SB.rpc('cp_owner_get_questionnaire',{
+    p_token:c.questionnaire.token,
+    p_owner_secret:ownerSecret()
+  });
+  if(error){console.error(error);return false}
+  const row=Array.isArray(data)?data[0]:data;
+  if(!row)return false;
+  const before=c.questionnaire.status;
+  c.questionnaire.status=row.status||c.questionnaire.status;
+  c.questionnaire.sentAt=row.sent_at||c.questionnaire.sentAt;
+  c.questionnaire.completedAt=row.completed_at||c.questionnaire.completedAt;
+  if(row.answers)c.questionnaire.answers=row.answers;
+  if(row.notes)c.questionnaire.notes=row.notes;
+  localStorage.setItem(STORE,JSON.stringify(db));
+  if(before!==c.questionnaire.status&&c.questionnaire.status==='Compilato')logEvent(c.id,'Questionario compilato dal cliente');
+  if(rerender&&activeView==='client'&&cur?.id===c.id&&tab==='analysis')renderClient();
+  return true;
+}
+async function loadPublicQuestionnaire(token){
+  if(!backendReady())return null;
+  const {data,error}=await SB.rpc('cp_get_public_questionnaire',{p_token:token});
+  if(error){console.error(error);return null}
+  const row=Array.isArray(data)?data[0]:data;
+  if(!row)return null;
+  await SB.rpc('cp_mark_questionnaire_opened',{p_token:token});
+  return row;
+}
+async function submitPublicOnline(token,answers,notes){
+  if(!backendReady())throw new Error('Servizio online non configurato');
+  const {error}=await SB.rpc('cp_submit_public_questionnaire',{
+    p_token:token,
+    p_answers:answers||{},
+    p_notes:notes||{}
+  });
+  if(error)throw error;
+}
+
+let cur=null,tab='overview';
+const save=()=>{localDirty=true;localStorage.setItem(STORE,JSON.stringify(db));scheduleCloudSave()};
+const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+
+
+// V12.7 - dati compatibili con V12.6 + archivio/storico lavori.
+const TIME_SESSION_KEY='clientpro_active_time_v126';
+const PENDING_TIME_KEY='clientpro_pending_time_v126';
+const IDLE_LIMIT_MS=5*60*1000;
+const TIME_CATEGORIES=['Intervista','Analisi','Problemi','Progetti','Attività'];
+let activeTimeSession=null;
+let idleTimer=null;
+let activeProjectId='';
+let clientListMode='active';
+
+function ensureClientData(c){
+  if(!c)return c;
+  if(!Array.isArray(c.problems))c.problems=[];
+  if(!Array.isArray(c.projects))c.projects=[];
+  if(c.archived==null)c.archived=false;
+  if(!c.address||typeof c.address!=='object')c.address={};
+  ['street','zip','city','province','operational','mapsUrl'].forEach(k=>{if(c.address[k]==null)c.address[k]=''});
+  if(c.hourlyRate==null)c.hourlyRate='';
+  c.projects.forEach(p=>ensureProjectData(p,c));
+  return c;
+}
+function ensureProjectData(p,c){
+  if(!p)return p;
+  if(!p.id)p.id=crypto.randomUUID();
+  if(!p.startedAt)p.startedAt=new Date().toISOString();
+  if(!Array.isArray(p.closures))p.closures=[];
+  if(!p.relationType)p.relationType='new';
+  if(p.parentProjectId==null)p.parentProjectId='';
+  return p;
+}
+function ensureAllData(){
+  if(!Array.isArray(db.clients))db.clients=[];
+  if(!Array.isArray(db.tasks))db.tasks=[];
+  if(!Array.isArray(db.history))db.history=[];
+  if(!Array.isArray(db.timeEntries))db.timeEntries=[];
+  db.clients.forEach(ensureClientData);
+  db.tasks.forEach(t=>{if(!t.id)t.id=crypto.randomUUID();if(t.projectId==null)t.projectId=''});
+}
+function ensureTimeData(){ensureAllData()}
+function pendingTimeEntries(){try{const value=JSON.parse(localStorage.getItem(PENDING_TIME_KEY)||'[]');return Array.isArray(value)?value:[]}catch(e){return []}}
+function queuePendingTime(entry){const pending=pendingTimeEntries();if(!pending.some(e=>e.id===entry.id))pending.push(entry);localStorage.setItem(PENDING_TIME_KEY,JSON.stringify(pending))}
+function mergePendingTimeEntries(){ensureTimeData();const pending=pendingTimeEntries(),known=new Set(db.timeEntries.map(e=>e.id));let added=0;pending.forEach(entry=>{if(entry?.id&&!known.has(entry.id)){db.timeEntries.push(entry);known.add(entry.id);added++}});return added}
+function clearSyncedPendingTime(payload){const synced=new Set((payload?.timeEntries||[]).map(e=>e.id));const remaining=pendingTimeEntries().filter(e=>!synced.has(e.id));if(remaining.length)localStorage.setItem(PENDING_TIME_KEY,JSON.stringify(remaining));else localStorage.removeItem(PENDING_TIME_KEY)}
+function openProjectsFor(c){ensureClientData(c);return c.projects.filter(p=>p.status!=='Completato')}
+function inferredProjectId(c,category){
+  if(activeProjectId&&c.projects.some(p=>p.id===activeProjectId))return activeProjectId;
+  if(category==='Progetti'||category==='Attività'){
+    const open=openProjectsFor(c);
+    if(open.length===1)return open[0].id;
+  }
+  return '';
+}
+function trackingContext(){
+  if(!cur?.id||cur.archived)return null;
+  if(activeView==='interview')return {clientId:cur.id,category:'Intervista',projectId:''};
+  if(activeView!=='client')return null;
+  const map={analysis:'Analisi',problems:'Problemi',projects:'Progetti',tasks:'Attività'};
+  const category=map[tab];
+  return category?{clientId:cur.id,category,projectId:inferredProjectId(cur,category)}:null;
+}
+function persistActiveTime(){try{activeTimeSession?localStorage.setItem(TIME_SESSION_KEY,JSON.stringify(activeTimeSession)):localStorage.removeItem(TIME_SESSION_KEY)}catch(e){}}
+function startTimeSession(context,startedAt=Date.now()){
+  if(!context||document.visibilityState==='hidden')return;
+  activeTimeSession={id:crypto.randomUUID(),clientId:context.clientId,category:context.category,projectId:context.projectId||'',startedAt,lastActivityAt:startedAt};
+  persistActiveTime();resetIdleTimer();
+}
+function closeTimeSession(reason='context',endedAt=Date.now()){
+  if(!activeTimeSession)return;
+  const s=activeTimeSession;activeTimeSession=null;clearTimeout(idleTimer);idleTimer=null;
+  const end=Math.max(s.startedAt,Math.min(endedAt,Date.now())),durationMs=Math.max(0,end-s.startedAt);
+  if(durationMs>=1000){
+    ensureTimeData();
+    const entry={id:s.id,clientId:s.clientId,category:s.category,projectId:s.projectId||'',startedAt:new Date(s.startedAt).toISOString(),endedAt:new Date(end).toISOString(),durationMs,closeReason:reason};
+    db.timeEntries.push(entry);queuePendingTime(entry);save();
+  }
+  persistActiveTime();
+}
+function syncTimeContext(){
+  const context=trackingContext();
+  if(!context){closeTimeSession('uscita-contesto');return}
+  if(activeTimeSession&&(activeTimeSession.clientId!==context.clientId||activeTimeSession.category!==context.category||(activeTimeSession.projectId||'')!==(context.projectId||'')))closeTimeSession('cambio-contesto');
+  if(!activeTimeSession&&document.visibilityState!=='hidden')startTimeSession(context);
+}
+function resetIdleTimer(){clearTimeout(idleTimer);if(!activeTimeSession)return;const remaining=Math.max(0,activeTimeSession.lastActivityAt+IDLE_LIMIT_MS-Date.now());idleTimer=setTimeout(()=>{if(activeTimeSession)closeTimeSession('inattività',activeTimeSession.lastActivityAt+IDLE_LIMIT_MS)},remaining)}
+function noteUserActivity(){const context=trackingContext();if(!context||document.visibilityState==='hidden')return;if(!activeTimeSession)startTimeSession(context);else{if(activeTimeSession.clientId!==context.clientId||activeTimeSession.category!==context.category||(activeTimeSession.projectId||'')!==(context.projectId||'')){syncTimeContext();return}activeTimeSession.lastActivityAt=Date.now();persistActiveTime();resetIdleTimer()}}
+function recoverTimeSession(){let previous=null;try{previous=JSON.parse(localStorage.getItem(TIME_SESSION_KEY)||'null')}catch(e){}if(!previous?.clientId||!previous?.startedAt)return;activeTimeSession=previous;closeTimeSession('ripristino',Math.min(Date.now(),Number(previous.lastActivityAt||previous.startedAt)+IDLE_LIMIT_MS))}
+function timeEntriesFor(clientId){ensureTimeData();return db.timeEntries.filter(e=>e.clientId===clientId)}
+function timeMsFor(clientId,category='',projectId=null){
+  let total=timeEntriesFor(clientId).filter(e=>(!category||e.category===category)&&(projectId===null||(e.projectId||'')===projectId)).reduce((sum,e)=>sum+Math.max(0,Number(e.durationMs)||0),0);
+  if(activeTimeSession?.clientId===clientId&&(!category||activeTimeSession.category===category)&&(projectId===null||(activeTimeSession.projectId||'')===projectId))total+=Math.max(0,Date.now()-activeTimeSession.startedAt);
+  return total;
+}
+function formatDuration(ms){const minutes=Math.floor(Math.max(0,ms)/60000),hours=Math.floor(minutes/60),mins=minutes%60;if(!hours)return `${mins} min`;return `${hours} h${mins?' '+String(mins).padStart(2,'0')+' min':''}`}
+function moneyFmt(v){return new Intl.NumberFormat('it-IT',{style:'currency',currency:'EUR'}).format(Number(v)||0)}
+function moneyValue(c){const rate=Number(c.hourlyRate)||0;return rate?moneyFmt(timeMsFor(c.id)/3600000*rate):'—'}
+function timeSummaryHTML(c){const total=timeMsFor(c.id);return `<div class="timeSummary"><div class=card><h3>Tempo di lavoro</h3><div class=timeTotal>${formatDuration(total)}</div><div class=mut>Conteggio automatico nelle aree di lavoro del cliente.</div><div class=rateRow><label for=hourlyRate>Tariffa €/ora</label><input id=hourlyRate type=number min=0 step=0.5 inputmode=decimal value="${esc(c.hourlyRate??'')}" onchange="setHourlyRate(this.value)"></div><p>Valore stimato: <span class=timeValue>${moneyValue(c)}</span></p></div><div class=card><h3>Suddivisione per categoria</h3><div class=timeBreakdown>${TIME_CATEGORIES.map(category=>`<div class=item><div class="row between"><span>${category}</span><b>${formatDuration(timeMsFor(c.id,category))}</b></div></div>`).join('')}</div></div></div>`}
+function setHourlyRate(value){if(!cur)return;cur.hourlyRate=value===''?'':Math.max(0,Number(value)||0);save();renderClient()}
+
+function addressText(c){
+  ensureClientData(c);
+  return [c.address.street,[c.address.zip,c.address.city].filter(Boolean).join(' '),c.address.province].filter(Boolean).join(', ');
+}
+function mapsHref(c){
+  const a=addressText(c);
+  return c.address?.mapsUrl|| (a?'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(a):'');
+}
+function projectById(c,id){return (c?.projects||[]).find(p=>p.id===id)||null}
+function projectLabel(p){if(!p)return '';if(p.relationType==='assistance')return 'Assistenza / modifica';if(p.relationType==='resume')return 'Ripreso';return 'Nuovo progetto'}
+function projectTimeMs(c,p){
+  ensureProjectData(p,c);
+  const closures=p.closures||[],last=closures.length?latestClosure(p):null,lastClose=last?Date.parse(last.closedAt||''):0;
+  const entries=timeEntriesFor(c.id).filter(e=>!lastClose||Date.parse(e.startedAt||'')>lastClose);
+  if((c.projects||[]).length===1){
+    let total=entries.reduce((s,e)=>s+(Number(e.durationMs)||0),0);
+    if(activeTimeSession?.clientId===c.id&&(!lastClose||activeTimeSession.startedAt>lastClose))total+=Math.max(0,Date.now()-activeTimeSession.startedAt);
+    return total;
+  }
+  let total=entries.filter(e=>(e.projectId||'')===p.id).reduce((s,e)=>s+(Number(e.durationMs)||0),0);
+  if(activeTimeSession?.clientId===c.id&&(activeTimeSession.projectId||'')===p.id&&(!lastClose||activeTimeSession.startedAt>lastClose))total+=Math.max(0,Date.now()-activeTimeSession.startedAt);
+  return total;
+}
+function latestClosure(p){return (p.closures||[]).slice().sort((a,b)=>new Date(b.closedAt)-new Date(a.closedAt))[0]||null}
+function closureSummaryHTML(c,p,s){
+  return `<div class="item closureCard"><div class="row between"><div><b>${esc(p.name)}</b><div class=mut>${fmt(s.startedAt)} → ${fmt(s.closedAt)}</div></div><span class="pill green">Concluso</span></div><div class=summaryGrid><div class=summaryBox><small>Tempo</small><b>${formatDuration(s.durationMs||0)}</b></div><div class=summaryBox><small>Tariffa</small><b>${moneyFmt(s.hourlyRate||0)}/h</b></div><div class=summaryBox><small>Valore lavoro</small><b>${moneyFmt(s.estimatedValue||0)}</b></div><div class=summaryBox><small>Incassato</small><b>${moneyFmt(s.collectedAmount||0)}</b></div></div>${s.agreedAmount!==''&&s.agreedAmount!=null?`<div class=mut>Importo concordato: <b>${moneyFmt(s.agreedAmount)}</b></div>`:''}${s.result?`<p><b>Risultato:</b> ${esc(s.result)}</p>`:''}</div>`;
+}
+function clientHistoryHTML(c){
+  ensureClientData(c);
+  const closures=(c.projects||[]).flatMap(p=>(p.closures||[]).map(s=>({p,s}))).sort((a,b)=>new Date(b.s.closedAt)-new Date(a.s.closedAt));
+  const events=db.history.filter(h=>h.clientId===c.id);
+  return `<div class=card><div class="row between"><h3>Consuntivi lavori</h3><span class=pill>${closures.length}</span></div>${closures.length?closures.map(x=>closureSummaryHTML(c,x.p,x.s)).join(''):'<div class=mut>Nessun lavoro concluso.</div>'}</div>
+  <div class=card><div class="row between"><h3>Storico completo</h3><span class=pill>${events.length}</span></div>${events.length?events.map(h=>{const p=h.projectId?projectById(c,h.projectId):null;return `<div class="item ${p?'historyProject':''}"><b>${esc(h.text)}</b>${p?`<div class=mut>Progetto: ${esc(p.name)}</div>`:''}<div class=mut>${fmt(h.date)}</div></div>`}).join(''):'<div class=mut>Nessun evento.</div>'}</div>`;
+}
+
+
+function dashboardGo(page){
+  const valid=['home','clients','analysis','problems','projects','tasks'];
+  if(!valid.includes(page)) return;
+  go(page);
+}
+
+function iconSvg(name){
+ const icons={
+  clients:`<svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
+  problems:`<svg viewBox="0 0 24 24"><path d="M10.3 2.9 1.8 17a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 2.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>`,
+  projects:`<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>`,
+  tasks:`<svg viewBox="0 0 24 24"><path d="m9 11 3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>`,
+  interview:`<svg viewBox="0 0 24 24"><path d="M9 11h6M9 15h4"/><path d="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/><path d="M9 7h6"/></svg>`,
+  send:`<svg viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>`
+ }; return icons[name]||'';
+}
+function problems(){
+ let a=db.clients.flatMap(c=>(c.problems||[]).map((p,i)=>({c,p,i})));
+ view.innerHTML=a.length?`<div class=list>${a.map(x=>`<div class="card problemAll ${x.p.status==='Risolto'?'resolved':''}" onclick="openClient('${x.c.id}','problems')"><div class="row between"><div><b>${esc(x.p.title)}</b><div class=mut>${esc(x.c.name)} · ${esc(x.p.description||'')}</div></div><span class=pill>${esc(x.p.status)}</span></div></div>`).join('')}</div>`:'<div class="card empty">Nessun problema registrato.</div>'
+}
+
+
+let appRoutingEnabled=false;
+
+function pushRoute(route, replace=false){
+  if(!appRoutingEnabled) return;
+  try{
+    if(replace) history.replaceState(route,'');
+    else history.pushState(route,'');
+  }catch(e){
+    console.warn('Router interno non disponibile',e);
+  }
+}
+
+function renderSection(p){
+  closeTimeSession('uscita-cliente');activeProjectId='';
+  activeView='section';
+  cur=null;
+  activate(p);
+  crumb.textContent='ClientPro';
+  title.textContent={home:'Dashboard',clients:'Clienti',analysis:'Analisi',problems:'Problemi',projects:'Progetti',tasks:'Attività'}[p]||'Dashboard';
+  const fn={home,clients,analysis,problems,projects,tasks}[p]||home;
+  fn();
+  window.scrollTo(0,0);
+}
+
+function restoreRoute(route){
+  if(!route){renderSection('home');return}
+  if(route.view==='section'){renderSection(route.page||'home');return}
+  if(route.view==='client'){openClient(route.clientId,route.tab||'overview',false);return}
+  if(route.view==='interview'){
+    const c=db.clients.find(x=>x.id===route.clientId);
+    if(c){activeView='interview';cur=c;tab='interview';activate('');ensureClientData(cur);ensureInterview(cur);renderInterview();syncTimeContext();window.scrollTo(0,0)}
+    else renderSection('clients');
+    return;
+  }
+  if(route.view==='questionnairePreview'){
+    const c=db.clients.find(x=>x.id===route.clientId);
+    if(c){cur=c;tab='analysis';activate('');renderSelfQuestionnaire(false);window.scrollTo(0,0)}
+    else renderSection('clients');
+    return;
+  }
+  renderSection('home');
+}
+
+window.addEventListener('popstate',e=>{
+  if(!appRoutingEnabled) return;
+  restoreRoute(e.state||{view:'section',page:'home'});
+});
+
+
+function showAuth(mode='login'){
+  document.body.innerHTML=`<div class="authShell"><div class="authCard">
+    <div class="authBrand"><div class="mark">CP</div>ClientPro <span class="betaBadge">BETA</span></div>
+    <h1 id="authTitle">${mode==='login'?'Bentornato':'Crea il tuo account'}</h1>
+    <p>Accedi allo stesso spazio da PC, smartphone e tablet senza perdere il lavoro.</p>
+    <div class="authTabs"><button id="tabLogin" class="${mode==='login'?'on':''}" onclick="showAuth('login')">Accedi</button><button id="tabSignup" class="${mode==='signup'?'on':''}" onclick="showAuth('signup')">Registrati</button></div>
+    <label>E-mail</label><input id="authEmail" type="email" autocomplete="email" placeholder="nome@email.it">
+    <label>Password</label><input id="authPassword" type="password" autocomplete="${mode==='login'?'current-password':'new-password'}" placeholder="Almeno 8 caratteri">
+    ${mode==='signup'?'<label>Conferma password</label><input id="authPassword2" type="password" autocomplete="new-password" placeholder="Ripeti la password">':''}
+    <div id="authMsg" class="authMsg"></div>
+    <button class="primary" style="width:100%" onclick="${mode==='login'?'doLogin()':'doSignup()'}">${mode==='login'?'Accedi':'Crea account'}</button>
+    ${mode==='login'?'<button style="width:100%;margin-top:8px" onclick="resetPassword()">Password dimenticata</button>':''}
+  </div></div>`;
+}
+async function doLogin(){
+  const email=document.getElementById('authEmail').value.trim();
+  const password=document.getElementById('authPassword').value;
+  const msg=document.getElementById('authMsg');
+  msg.textContent='Accesso…';
+  const {data,error}=await SB.auth.signInWithPassword({email,password});
+  if(error){msg.textContent=error.message;return}
+  authUser=data.user;
+  location.reload();
+}
+async function doSignup(){
+  const email=document.getElementById('authEmail').value.trim();
+  const password=document.getElementById('authPassword').value;
+  const p2=document.getElementById('authPassword2').value;
+  const msg=document.getElementById('authMsg');
+  if(password.length<8){msg.textContent='Usa una password di almeno 8 caratteri.';return}
+  if(password!==p2){msg.textContent='Le password non coincidono.';return}
+  msg.textContent='Creazione account…';
+  const {data,error}=await SB.auth.signUp({email,password,options:{emailRedirectTo:'https://clientprov121supabasecollegato.vercel.app'}});
+  if(error){msg.textContent=error.message;return}
+  if(data.session){authUser=data.user;location.reload()}
+  else msg.textContent='Account creato. Controlla la tua e-mail per confermare la registrazione.';
+}
+async function resetPassword(){
+  const email=document.getElementById('authEmail').value.trim();
+  const msg=document.getElementById('authMsg');
+  if(!email){msg.textContent='Inserisci prima la tua e-mail.';return}
+  const {error}=await SB.auth.resetPasswordForEmail(email,{redirectTo:'https://clientprov121supabasecollegato.vercel.app?recovery=1'});
+  msg.textContent=error?error.message:'Ti ho inviato le istruzioni per reimpostare la password.';
+}
+async function doLogout(){
+  if(!backendReady())return;
+  await saveCloudState(true);
+  await SB.auth.signOut();
+  authUser=null;workspaceId=null;
+  localStorage.removeItem(STORE);
+  location.reload();
+}
+
+function showRecoveryPassword(){
+  document.body.innerHTML=`<div class="authShell"><div class="authCard">
+    <div class="authBrand"><div class="mark">CP</div>ClientPro</div>
+    <h1>Nuova password</h1>
+    <p>Scegli una nuova password per il tuo account.</p>
+    <label>Nuova password</label><input id="newPass1" type="password" placeholder="Almeno 8 caratteri">
+    <label>Conferma password</label><input id="newPass2" type="password" placeholder="Ripeti la password">
+    <div id="authMsg" class="authMsg"></div>
+    <button class="primary" style="width:100%" onclick="saveNewPassword()">Salva nuova password</button>
+  </div></div>`;
+}
+async function saveNewPassword(){
+  const p1=document.getElementById('newPass1').value;
+  const p2=document.getElementById('newPass2').value;
+  const msg=document.getElementById('authMsg');
+  if(p1.length<8){msg.textContent='Usa una password di almeno 8 caratteri.';return}
+  if(p1!==p2){msg.textContent='Le password non coincidono.';return}
+  const {error}=await SB.auth.updateUser({password:p1});
+  if(error){msg.textContent=error.message;return}
+  msg.textContent='Password aggiornata. Riapertura ClientPro…';
+  setTimeout(()=>location.href=ONLINE_CFG.publicBaseUrl||location.origin,900);
+}
+
+async function openAccountSettings(){
+  const cloud=backendReady();
+  show(`<div class="modalHead"><h2>Account e impostazioni</h2><button class="modalClose" onclick="modal.close()" aria-label="Chiudi">×</button></div>
+    <div class="settingsGrid">
+      <div class="settingBox"><h3>Account</h3><p>${cloud?(authUser?.email||'Cloud configurato'):'ClientPro è in modalità locale.'}</p>${cloud&&authUser?'<button onclick="doLogout()">Esci dall’account</button>':'<span class="cloudLocal">Cloud non configurato</span>'}</div>
+      <div class="settingBox"><h3>Sincronizzazione</h3><p>${cloud?'Clienti, interviste, problemi, progetti, attività, tempi, consuntivi e storico vengono sincronizzati nel tuo spazio personale.':'Per usare gli stessi dati su PC e smartphone collega il backend incluso nel pacchetto.'}</p><div class="syncActions"><span class="${cloud?'cloudOk':'cloudLocal'}">${cloud?'● Cloud disponibile':'● Solo dispositivo'}</span>${cloud?'<button onclick="syncNow(true)">Sincronizza ora</button>':''}</div><p class="syncTime" style="margin-top:8px">${syncTimeText()}</p></div>
+      <div class="settingBox"><h3>Aspetto</h3><p>Scegli come visualizzare ClientPro.</p><div class="themeChoices">
+        <button data-theme-choice="dark" onclick="setAppTheme('dark')" class="${(db.theme||'dark')==='dark'?'themeOn':''}">Scuro</button>
+        <button data-theme-choice="light" onclick="setAppTheme('light')" class="${db.theme==='light'?'themeOn':''}">Chiaro</button>
+        <button data-theme-choice="system" onclick="setAppTheme('system')" class="${db.theme==='system'?'themeOn':''}">Sistema</button>
+      </div></div>
+      <div class="settingBox"><h3>Backup / esportazione</h3><p>Scarica una copia completa dei tuoi dati ClientPro.</p><button onclick="exportData()">Esporta dati</button></div>
+      <div class="settingBox"><h3>Ripristino dati</h3><p>Importa un backup ClientPro precedentemente esportato.</p><input id="importFile" type="file" accept=".json,application/json" onchange="importData(this.files[0])"></div>
+      <div class="settingBox"><h3>Installazione</h3><p>Installa ClientPro sul dispositivo per aprirla come una normale app.</p><button onclick="installApp()">Installa app</button></div>
+      <div class="settingBox"><h3>Versione</h3><p>ClientPro Commercial Beta 12.7<br>Archivio clienti, storico lavori, consuntivi e indirizzi.</p><span class="betaBadge">COMMERCIAL BETA · v12.7</span></div>
+    </div>`);
+  requestAnimationFrame(()=>{try{modal.scrollTop=0;modalBody.scrollTop=0}catch(e){}});
+}
+
+function exportData(){
+  const blob=new Blob([JSON.stringify({exportedAt:new Date().toISOString(),version:'12.7',data:db},null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='ClientPro_backup_'+new Date().toISOString().slice(0,10)+'.json';a.click();URL.revokeObjectURL(a.href);
+}
+async function importData(file){
+  if(!file)return;
+  try{
+    const obj=JSON.parse(await file.text());
+    const incoming=obj.data||obj;
+    if(!incoming||!Array.isArray(incoming.clients))throw new Error('File non valido');
+    if(!confirm('Sostituire i dati attuali con questo backup?'))return;
+    db=incoming;ensureAllData();save();modal.close();applyTheme();go('home',false);alert('Backup importato correttamente.');
+  }catch(e){alert('Il file selezionato non è un backup ClientPro valido.')}
+}
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault();deferredInstallPrompt=e;
+  const b=document.getElementById('installBtn');if(b)b.classList.add('show');
+});
+window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;const b=document.getElementById('installBtn');if(b)b.classList.remove('show')});
+async function installApp(){
+  if(deferredInstallPrompt){
+    deferredInstallPrompt.prompt();
+    await deferredInstallPrompt.userChoice;
+    deferredInstallPrompt=null;
+    const b=document.getElementById('installBtn');if(b)b.classList.remove('show');
+    return;
+  }
+  const isiOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
+  show(`<h2>Installa ClientPro</h2><p class=mut>${isiOS?'Su iPhone/iPad: apri il menu Condividi di Safari e scegli “Aggiungi alla schermata Home”.':'Se il browser non mostra ancora il pulsante di installazione, apri il menu del browser e scegli “Installa app” oppure “Aggiungi alla schermata Home”.'}</p>`);
+}
+
+function applyTheme(){
+  const mode=db.theme||'dark';
+  const useLight=mode==='light'||(mode==='system'&&window.matchMedia&&window.matchMedia('(prefers-color-scheme: light)').matches);
+  document.documentElement.classList.toggle('light',useLight);
+}
+function setAppTheme(mode){
+  if(!['dark','light','system'].includes(mode))mode='dark';
+  db.theme=mode;save();applyTheme();
+  document.querySelectorAll('[data-theme-choice]').forEach(b=>b.classList.toggle('themeOn',b.dataset.themeChoice===mode));
+}
+try{window.matchMedia('(prefers-color-scheme: light)').addEventListener('change',()=>{if(db.theme==='system')applyTheme()})}catch(e){}
+applyTheme();
+function activate(p){document.querySelectorAll('[data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page===p))}
+function go(p,push=true){renderSection(p);if(push)pushRoute({view:'section',page:p})}
+function logEvent(clientId,text,projectId=''){db.history.unshift({id:crypto.randomUUID(),clientId,projectId:projectId||'',text,date:new Date().toISOString()});save()}
+function fmt(d){try{return new Date(d).toLocaleString('it-IT',{dateStyle:'short',timeStyle:'short'})}catch{return d}}
+function home(){
+ let activeClients=db.clients.filter(c=>!c.archived),activeIds=new Set(activeClients.map(c=>c.id)),probs=activeClients.flatMap(c=>c.problems||[]),prs=activeClients.flatMap(c=>c.projects||[]),todo=db.tasks.filter(t=>!t.done&&(!t.clientId||activeIds.has(t.clientId)));
+ let activeProjects=prs.filter(x=>x.status!=='Completato').length, completed=prs.filter(x=>x.status==='Completato').length;
+ let sent=activeClients.filter(c=>c.questionnaire?.status==='Inviato').length;
+ let qDone=activeClients.filter(c=>c.questionnaire?.status==='Compilato').length;
+ let totalP=Math.max(prs.length,1), donePct=Math.round(completed/totalP*100);
+ view.innerHTML=`
+ <div class="dashboardHero"><div><h2>Panoramica attività</h2><p>Tutto quello che richiede la tua attenzione, in un'unica schermata.</p></div></div>
+
+ <div class="grid4">
+   <div class="card stat dashStat" onclick="dashboardGo('clients')">
+     <div class="statTop"><span>Clienti attivi</span><div class="statIcon iBlue"><button class="dashboardIconBtn" type="button" aria-label="Apri clienti" title="Clienti" onclick="event.stopPropagation();dashboardGo('clients')">${iconSvg('clients')}</button></div></div>
+     <b>${db.clients.filter(c=>!c.archived).length}</b><div class="metricDelta">Apri l'elenco clienti</div>
+   </div>
+   <div class="card stat dashStat" onclick="dashboardGo('problems')">
+     <div class="statTop"><span>Problemi aperti</span><div class="statIcon iOrange"><button class="dashboardIconBtn" type="button" aria-label="Apri problemi" title="Problemi" onclick="event.stopPropagation();dashboardGo('problems')">${iconSvg('problems')}</button></div></div>
+     <b>${probs.filter(x=>x.status!=='Risolto').length}</b><div class="metricDelta">Da analizzare o risolvere</div>
+   </div>
+   <div class="card stat dashStat" onclick="dashboardGo('projects')">
+     <div class="statTop"><span>Progetti attivi</span><div class="statIcon iGreen"><button class="dashboardIconBtn" type="button" aria-label="Apri progetti" title="Progetti" onclick="event.stopPropagation();dashboardGo('projects')">${iconSvg('projects')}</button></div></div>
+     <b>${activeProjects}</b><div class="metricDelta">${completed} completati</div>
+   </div>
+   <div class="card stat dashStat" onclick="dashboardGo('tasks')">
+     <div class="statTop"><span>Attività da fare</span><div class="statIcon iPurple"><button class="dashboardIconBtn" type="button" aria-label="Apri attività" title="Attività" onclick="event.stopPropagation();dashboardGo('tasks')">${iconSvg('tasks')}</button></div></div>
+     <b>${todo.length}</b><div class="metricDelta">Apri le attività</div>
+   </div>
+ </div>
+
+ <div class="analytics3">
+   <div class="card donutHit" onclick="dashboardGo('projects')" role="button" tabindex="0" title="Apri progetti">
+     <div class="sectionHead"><h3>Stato progetti</h3><span class="pill blue">${prs.length} totali</span></div>
+     <div class="donutWrap">
+       <div class="donut" style="--done:${Math.max(donePct,8)}%"><div class="donutCenter">${donePct}%<small>completati</small></div></div>
+       <div class="legend">
+         <div class="legendRow"><span class="legendDot" style="background:var(--blue)"></span>Completati</div>
+         <div class="legendRow"><span class="legendDot" style="background:var(--green)"></span>In corso</div>
+         <div class="legendRow"><span class="legendDot" style="background:var(--orange)"></span>Da fare</div>
+         <div class="legendRow"><span class="legendDot" style="background:#31445b"></span>Altri stati</div>
+       </div>
+     </div>
+   </div>
+
+   <div class="card dashboardClickable" onclick="dashboardGo('tasks')" role="button" tabindex="0" title="Apri attività">
+     <div class="sectionHead"><h3>Attività settimanale</h3><span class="pill green">Questa settimana</span></div>
+     <div class="weekChart">
+       ${[['Lun',44],['Mar',72],['Mer',52],['Gio',84],['Ven',64],['Sab',92],['Dom',58]].map(x=>`<div class="weekCol"><i style="height:${x[1]}%"></i><span>${x[0]}</span></div>`).join('')}
+     </div>
+   </div>
+
+   <div class="card">
+     <div class="sectionHead"><h3>Prossime scadenze</h3><span class="pill orange">${todo.length}</span></div>
+     <div class="deadlineList">
+       ${todo.length?todo.slice(0,4).map(t=>{let c=db.clients.find(x=>x.id===t.clientId);let d=t.date?new Date(t.date):null;return `<div class="deadlineItem"><div class="deadlineDate">${d&&!isNaN(d)?d.toLocaleDateString('it-IT',{day:'2-digit',month:'short'}):'—'}</div><div><b>${esc(t.title)}</b><div class="mut">${c?esc(c.name):'Attività generale'}</div></div><button onclick="if(window.event) window.event.stopPropagation();toggleTask('${t.id}')">✓</button></div>`}).join(''):'<div class="empty">Nessuna scadenza aperta.</div>'}
+     </div>
+   </div>
+ </div>
+
+ <div class="ctaGrid">
+   <div class="card ctaCard" onclick="quickInterview()">
+     <div class="ctaIcon"><button class="dashboardIconBtn" type="button" aria-label="Inizia nuova intervista" title="Intervista" onclick="event.stopPropagation();quickInterview()">${iconSvg('interview')}</button></div><h3>Inizia nuova intervista</h3>
+     <p>Seleziona il cliente e apri direttamente la nostra intervista professionale.</p>
+   </div>
+   <div class="card ctaCard secondary" onclick="quickQuestionnaire()">
+     <div class="ctaIcon"><button class="dashboardIconBtn" type="button" aria-label="Invia questionario" title="Questionario" onclick="event.stopPropagation();quickQuestionnaire()">${iconSvg('send')}</button></div><h3>Invia questionario</h3>
+     <p>Seleziona il cliente e prepara il questionario da inviare senza uscire da ClientPro.</p>
+   </div>
+ </div>
+
+ <div class="grid2" style="margin-top:14px">
+   <div class="card"><div class="sectionHead"><h3>Clienti recenti</h3><span class="pill blue">${db.clients.filter(c=>!c.archived).length}</span></div>${miniClients(db.clients.filter(c=>!c.archived).slice(-5).reverse())}</div>
+   <div class="card"><div class="sectionHead"><h3>Attività recenti</h3><span class="pill">${db.history.length}</span></div>${db.history.length?db.history.slice(0,5).map(h=>`<div class="item"><b>${esc(h.text)}</b><div class="mut">${fmt(h.date)}</div></div>`).join(''):'<div class="empty">Nessuna attività recente.</div>'}</div>
+ </div>
+
+ <div class="grid2" style="margin-top:14px">
+   <div class="card questionnaireHit" onclick="go('analysis')" role="button" tabindex="0" title="Apri analisi"><div class="sectionHead"><h3>Questionari</h3><span class="pill green">${qDone} compilati</span></div><div class="item"><div class="row between"><span class=mut>Inviati</span><b>${sent}</b></div></div><div class="item"><div class="row between"><span class=mut>Compilati</span><b>${qDone}</b></div></div></div>
+   <div class="card"><div class="sectionHead"><h3>Flusso di lavoro</h3></div><div class=mut>Cliente → Analisi → Problema → Soluzione → Progetto → Attività → Risolto</div></div>
+ </div>`}
+function quickInterview(){
+  const available=db.clients.filter(c=>!c.archived);if(!available.length){newClient();return}
+  show(`<h2>Inizia intervista</h2><label>Seleziona cliente</label><select id="qc">${available.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('')}</select><button class="primary" onclick="const id=qc.value;modal.close();startInterviewForClient(id)">Apri intervista</button>`)
+}
+function quickQuestionnaire(){
+  const available=db.clients.filter(c=>!c.archived);if(!available.length){newClient();return}
+  show(`<h2>Invia questionario</h2><label>Seleziona cliente</label><select id="qqc">${available.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('')}</select><button class="primary" onclick="modal.close();openClient(qqc.value,'analysis');setTimeout(prepareQuestionnaire,50)">Continua</button>`)
+}
+
+function miniClients(a){return a.length?`<div class=list>${a.map(c=>`<div class="item click" onclick="openClient('${c.id}')"><b>${esc(c.name)}</b><div class=mut>${esc(c.contact||'Nessun referente')} · ${c.archived?'Concluso':esc(c.status)}</div></div>`).join('')}</div>`:'<div class=empty>Nessun cliente.</div>'}
+function clients(){
+  ensureAllData();
+  const active=db.clients.filter(c=>!c.archived),closed=db.clients.filter(c=>c.archived);
+  if(clientListMode==='closed'&&!closed.length&&active.length)clientListMode='active';
+  view.innerHTML=`<div class=clientListTabs><button class="${clientListMode==='active'?'on':''}" onclick="clientListMode='active';clients()">Attivi (${active.length})</button><button class="${clientListMode==='closed'?'on':''}" onclick="clientListMode='closed';clients()">Conclusi (${closed.length})</button></div>
+  <input id="search" placeholder="Cerca attività, referente, indirizzo, telefono o e-mail..." oninput="refreshClientList(this.value)"><div id=clientList></div>`;
+  refreshClientList('');
+}
+function refreshClientList(q=''){
+  const source=db.clients.filter(c=>clientListMode==='closed'?c.archived:!c.archived);
+  const term=String(q||'').toLowerCase();
+  const filtered=source.filter(c=>[c.name,c.contact,c.phone,c.email,c.sector,addressText(c),c.address?.operational].join(' ').toLowerCase().includes(term));
+  clientList.innerHTML=clientHTML(filtered);
+}
+function clientHTML(a){return a.length?`<div class=list>${a.map(c=>`<div class="card click" onclick="openClient('${c.id}')"><div class="row between"><div><b>${esc(c.name)}</b><div class=mut>${esc(c.contact||'Nessun referente')}${c.phone?' · '+esc(c.phone):''}</div>${addressText(c)?`<small class=mut>${esc(addressText(c))}</small><br>`:''}<small class=mut>${esc(c.archived?'Cliente concluso':c.next||'Nessuna prossima azione')}</small></div><span class="pill ${c.archived?'archiveBadge':''}">${c.archived?'Concluso':esc(c.status)}</span></div></div>`).join('')}</div>`:`<div class="card empty">${clientListMode==='closed'?'Nessun cliente concluso.':'Nessun cliente attivo.'}</div>`}
+function analysis(){let a=db.clients.filter(c=>!c.archived&&(c.interview||c.questionnaire));view.innerHTML=a.length?a.map(c=>`<div class="card click" onclick="openClient('${c.id}','analysis')"><div class="row between"><div><b>${esc(c.name)}</b><div class=mut>Intervista: ${c.interview?interviewProgress(c)+'%':'non iniziata'} · Questionario: ${esc(c.questionnaire?.status||'non inviato')}</div></div><span class=pill>Apri</span></div></div>`).join(''):'<div class="card empty">Avvia un’analisi dalla scheda cliente.</div>'}
+function projects(){let a=db.clients.flatMap(c=>(c.projects||[]).map(p=>({c,p})));view.innerHTML=a.length?a.map(x=>`<div class="card projectCard" onclick="openClient('${x.c.id}','projects');setTimeout(()=>openProject('${x.p.id}'),30)"><div class="row between"><div><b>${esc(x.p.name)}</b><div class=mut>${esc(x.c.name)} · ${projectLabel(x.p)}</div></div><span class=pill>${esc(x.p.status)}</span></div></div>`).join(''):'<div class="card empty">Nessun progetto.</div>'}
+function tasks(){view.innerHTML=`<div class="row between"><h3>Attività</h3><button class=primary onclick="newTask()">＋ Nuova attività</button></div>${taskList(db.tasks)}`}
+function taskList(a,readonly=false){return a.length?`<div class=list>${a.map(t=>{let c=db.clients.find(x=>x.id===t.clientId),p=c&&t.projectId?projectById(c,t.projectId):null;return `<div class=item><div class="row between"><div><b style="${t.done?'text-decoration:line-through':''}">${esc(t.title)}</b><div class=mut>${c?esc(c.name)+' · ':''}${p?esc(p.name)+' · ':''}${esc(t.date||'Senza scadenza')}</div></div>${readonly?`<span class="pill ${t.done?'green':''}">${t.done?'Completata':'Aperta'}</span>`:`<button onclick="toggleTask('${t.id}')">${t.done?'↶':'✓'}</button>`}</div></div>`}).join('')}</div>`:'<div class=empty>Nessuna attività.</div>'}
+function openClient(id,t='overview',push=true){
+  const next=db.clients.find(c=>c.id===id);if(!next){go('clients',push);return}
+  if(cur?.id!==id)closeTimeSession('cambio-cliente');
+  activeProjectId='';activeView='client';cur=next;ensureClientData(cur);tab=t;activate('');crumb.textContent='Clienti / Scheda di lavoro';title.textContent=cur.name;renderClient();syncTimeContext();window.scrollTo(0,0);if(push)pushRoute({view:'client',clientId:id,tab:t})
+}
+function switchClientTab(t,push=true){if(!cur)return;activeProjectId='';tab=t;renderClient();syncTimeContext();window.scrollTo(0,0);if(push)pushRoute({view:'client',clientId:cur.id,tab:t})}
+function renderClient(){
+  let c=cur;ensureClientData(c);let ps=c.problems||[],prs=c.projects||[],hs=db.history.filter(h=>h.clientId===c.id).slice(0,8),addr=addressText(c),mh=mapsHref(c);
+  view.innerHTML=`<div class=card><div class="row between"><div><h2>${esc(c.name)}</h2><div class=mut>${esc(c.contact||'Nessun referente')} ${c.phone?'· '+esc(c.phone):''} ${c.email?'· '+esc(c.email):''}</div>${addr?`<div class=addressLine><span>📍 ${esc(addr)}</span>${mh?`<a href="${esc(mh)}" target="_blank" rel="noopener">Apri mappa</a>`:''}</div>`:''}${c.address.operational?`<div class=mut>Sede operativa: ${esc(c.address.operational)}</div>`:''}<p><span class="pill ${c.archived?'archiveBadge':''}">${c.archived?'Cliente concluso':esc(c.status)}</span></p></div><div class=softActions>${c.archived?'<button class=primary onclick=reactivateClient()>Riattiva cliente</button>':'<button onclick=archiveClient()>Concludi cliente</button>'}<button onclick=editClient()>Modifica</button></div></div></div>
+  <div class=tabs>${[['overview','Panoramica'],['analysis','Analisi'],['problems','Problemi'],['projects','Progetti'],['tasks','Attività'],['history','Storico']].map(x=>`<button class="${tab===x[0]?'on':''}" onclick="switchClientTab('${x[0]}')">${x[1]}</button>`).join('')}</div><div id=ct></div>`;
+  if(tab==='overview')ct.innerHTML=`${timeSummaryHTML(c)}<div class=grid4><div class="card stat"><span>Problemi</span><b>${ps.length}</b></div><div class="card stat"><span>Progetti</span><b>${prs.length}</b></div><div class="card stat"><span>Attività</span><b>${db.tasks.filter(t=>t.clientId===c.id&&!t.done).length}</b></div><div class="card stat"><span>Questionario</span><b style="font-size:16px">${esc(c.questionnaire?.status||'Non inviato')}</b></div></div>
+  <div class=grid2><div class=card><h3>Prossima azione</h3><b>${esc(c.archived?'Cliente archiviato':c.next||'Nessuna')}</b></div><div class=card><h3>Indirizzo attività</h3>${addr?`<div>${esc(addr)}</div>${mh?`<p><a href="${esc(mh)}" target="_blank" rel="noopener">Apri su Google Maps</a></p>`:''}`:'<div class=mut>Indirizzo non inserito.</div>'}${c.address.operational?`<div class=mut>Sede operativa: ${esc(c.address.operational)}</div>`:''}</div></div>
+  <div class=grid2><div class=card><h3>Note</h3><div class=mut>${esc(c.notes||'Nessuna nota')}</div></div><div class=card><h3>Stato lavori</h3><div class=mut>${prs.filter(p=>p.status!=='Completato').length} in corso · ${prs.filter(p=>p.status==='Completato').length} conclusi</div></div></div>
+  <div class=card><h3>Storico recente</h3>${hs.length?hs.map(h=>`<div class=item><b>${esc(h.text)}</b><div class=mut>${fmt(h.date)}</div></div>`).join(''):'<div class=mut>Nessun evento.</div>'}</div>`;
+  if(tab==='analysis')ct.innerHTML=`<div class=grid2><div class=card><div class="row between"><h2>Intervista digitale</h2><span class="pill blue">${c.interview?interviewProgress(c)+'%':'Non iniziata'}</span></div><p class=mut>Compila direttamente da PC, tablet o telefono con salvataggio automatico.</p><button class=primary ${c.archived?'disabled':''} onclick="startInterviewForClient('${c.id}')">${c.interview?'Continua intervista':'Inizia intervista'}</button></div>
+  <div class=card><div class="row between"><h2>Questionario cliente</h2><span class="pill ${c.questionnaire?.status==='Compilato'?'green':c.questionnaire?.status==='In compilazione'?'orange':c.questionnaire?.status==='Inviato'?'blue':''}">${esc(c.questionnaire?.status||'Non inviato')}</span></div><p class=mut>${questionnaireStatusText(c)}</p><div class=row>${c.questionnaire?.status==='Compilato'?'<button class=primary onclick=viewQuestionnaireAnswers()>Vedi risposte</button>':`<button class=primary ${c.archived?'disabled':''} onclick=prepareQuestionnaire()>Invia questionario</button>`}<button onclick=previewQuestionnaire()>Anteprima</button></div></div></div>`;
+  if(tab==='analysis')setTimeout(()=>syncQuestionnaire(c.id,false),120);
+  if(tab==='problems')ct.innerHTML=`<div class="row between"><h3>Problemi da risolvere</h3><button class=primary ${c.archived?'disabled':''} onclick=newProblem()>＋ Nuovo problema</button></div>${ps.length?ps.map((p,i)=>`<div class="card problem ${p.status==='Risolto'?'resolved':''} click" onclick="openProblem(${i})"><div class="row between"><div><b>${esc(p.title)}</b><div class=mut>${esc(p.description||'')}</div></div><span class=pill>${esc(p.status)}</span></div></div>`).join(''):'<div class="card empty">Nessun problema registrato.</div>'}`;
+  if(tab==='projects')ct.innerHTML=`<div class="row between"><h3>Progetti / lavori</h3><button class=primary ${c.archived?'disabled':''} onclick=newProject()>＋ Nuovo progetto</button></div>${prs.length?prs.map(p=>{ensureProjectData(p,c);const lc=latestClosure(p);return `<div class="card projectCard" onclick="openProject('${p.id}')"><div class="row between"><div><b>${esc(p.name)}</b><div class=mut>${esc(p.description||'')}</div><div class=projectMeta><span class=pill>${projectLabel(p)}</span>${lc?`<span class="pill green">${formatDuration(lc.durationMs||0)} · ${moneyFmt(lc.estimatedValue||0)}</span>`:''}</div></div><span class=pill>${esc(p.status)}</span></div></div>`}).join(''):'<div class="card empty">Nessun progetto.</div>'}`;
+  if(tab==='tasks')ct.innerHTML=`<div class="row between"><h3>Attività cliente</h3><button class=primary ${c.archived?'disabled':''} onclick="newTask('${c.id}')">＋ Attività</button></div>${taskList(db.tasks.filter(t=>t.clientId===c.id),c.archived)}`;
+  if(tab==='history')ct.innerHTML=clientHistoryHTML(c);
+}
+function interviewProgress(c){if(!c.interview)return 0;let a=c.interview.answers||{},filled=0;for(let i=1;i<=33;i++){let v=a[i];if(Array.isArray(v)?v.filter(Boolean).length:String(v||'').trim())filled++}return Math.round(filled/33*100)}
+function ensureInterview(c){
+  if(!c)return null;
+  if(!c.problems)c.problems=[];
+  if(!c.projects)c.projects=[];
+  if(!c.interview || typeof c.interview!=='object'){
+    c.interview={answers:{},notes:{},post:[],completed:false,startedAt:new Date().toISOString()};
+    logEvent(c.id,'Intervista iniziata');
+  }else{
+    if(!c.interview.answers || typeof c.interview.answers!=='object')c.interview.answers={};
+    if(!c.interview.notes || typeof c.interview.notes!=='object')c.interview.notes={};
+    if(!Array.isArray(c.interview.post))c.interview.post=[];
+    if(typeof c.interview.completed!=='boolean')c.interview.completed=false;
+    if(!c.interview.startedAt)c.interview.startedAt=new Date().toISOString();
+  }
+  return c.interview;
+}
+
+function startInterviewForClient(clientId,push=true){
+  try{
+    const c=db.clients.find(x=>x.id===clientId);
+    if(!c){alert('Cliente non trovato.');return}
+    activeView='interview';
+    cur=c;
+    tab='interview';
+    ensureClientData(cur);activeProjectId='';syncTimeContext();
+    ensureInterview(cur);
+    renderInterview();
+    window.scrollTo(0,0);
+    save();
+    if(push)pushRoute({view:'interview',clientId:cur.id});
+  }catch(e){
+    console.error('Errore apertura intervista',e);
+    alert('Errore apertura intervista: '+(e?.message||'errore sconosciuto'));
+  }
+}
+
+function startInterview(push=true){
+  if(!cur || !cur.id){alert('Apri prima un cliente.');return}
+  startInterviewForClient(cur.id,push);
+}
+function renderInterview(){if(!cur||!cur.id){alert('Cliente non disponibile.');go('clients');return}activeView='interview';tab='interview';ensureInterview(cur);let a=cur.interview.answers,n=cur.interview.notes;crumb.textContent='Clienti / '+cur.name;title.textContent='Intervista digitale';let out=`<div class=card><div class="row between"><div><b>${esc(cur.name)}</b><div class=mut>Salvataggio automatico</div></div><span class="pill blue">${interviewProgress(cur)}%</span></div><div class=progress><i style="width:${interviewProgress(cur)}%"></i></div></div>`;
+INTERVIEW.forEach(sec=>{out+=`<div class=section>${esc(sec[0])}</div>`;sec[1].forEach(q=>{out+=renderQuestion(q,a,n,true)})});
+out+=`<div class=section>9. NOTE E ANALISI POST-INTERVISTA</div><div class=qcard><p class=mut>Da compilare dopo l'incontro. Prima descrivi ciò che hai osservato; solo dopo valuta una possibile soluzione.</p>${['Problemi osservati','Passaggi ripetuti / attività affidate alla memoria','Informazioni sparse tra strumenti diversi','Problema da affrontare per primo','Come viene gestito oggi','Possibile soluzione da valutare'].map((x,i)=>`<label>${x}</label><textarea oninput="postNote(${i},this.value)">${esc(cur.interview.post[i]||'')}</textarea>`).join('')}</div><div class=sticky><button onclick="openClient(cur.id,'analysis',true)">Salva e continua dopo</button><button class=primary onclick=completeInterview()>Completa intervista</button></div>`;view.innerHTML=out}
+function renderQuestion(q,a,n,withProblem){let v=a[q.n];let h=`<div class=qcard><h3>${q.n}. ${esc(q.q)}</h3>${q.hint?`<div class=mut>${esc(q.hint)}</div>`:''}`;
+if(q.type==='text'||q.type==='long')h+=`<textarea class="${q.type==='long'?'long':''}" oninput="setAns(${q.n},this.value)" placeholder="Scrivi qui...">${esc(v||'')}</textarea>`;
+if(q.type==='single'||q.type==='multi')h+=`<div class=checks>${q.options.map(o=>`<label class=check><input type="${q.type==='single'?'radio':'checkbox'}" name="q${q.n}" ${(q.type==='single'?v===o:(v||[]).includes(o))?'checked':''} onchange="setChoice(${q.n},'${o.replaceAll("'","\\'")}','${q.type}',this.checked)"> ${esc(o)}</label>`).join('')}</div><textarea placeholder="Note / dettagli (facoltativo)" oninput="setNote(${q.n},this.value)">${esc(n[q.n]||'')}</textarea>`;
+if(q.type==='triple'){let t=v||['','',''];h+=`<input placeholder="1° problema" value="${esc(t[0])}" oninput="setTriple(${q.n},0,this.value)"><input placeholder="2° problema" value="${esc(t[1])}" oninput="setTriple(${q.n},1,this.value)"><input placeholder="3° problema" value="${esc(t[2])}" oninput="setTriple(${q.n},2,this.value)">`}
+if(withProblem && [5,6,7,8,9,10,13,15,17,18,20,23,24,25,27,29,31,32,33].includes(q.n))h+=`<button onclick="problemFromAnswer(${q.n},'${q.q.replaceAll("'","\\'")}')">＋ Crea problema da questa risposta</button>`;
+return h+'</div>'}
+function setAns(n,v){cur.interview.answers[n]=v;save()} function setNote(n,v){cur.interview.notes[n]=v;save()}
+function setChoice(n,o,t,ch){if(t==='single')cur.interview.answers[n]=o;else{let a=cur.interview.answers[n]||[];if(ch&&!a.includes(o))a.push(o);if(!ch)a=a.filter(x=>x!==o);cur.interview.answers[n]=a}save()}
+function setTriple(n,i,v){let a=cur.interview.answers[n]||['','',''];a[i]=v;cur.interview.answers[n]=a;save()} function postNote(i,v){cur.interview.post[i]=v;save()}
+function answerText(n){let v=cur.interview.answers[n],s=Array.isArray(v)?v.filter(Boolean).join(', '):String(v||'');let note=cur.interview.notes[n];return s+(note?' — '+note:'')}
+function problemFromAnswer(n,q){let txt=answerText(n);if(!txt.trim())return alert('Prima inserisci una risposta.');cur.problems.push({title:q,description:txt,priority:'Media',solution:'',status:'Da analizzare',source:'Intervista · domanda '+n});logEvent(cur.id,'Creato problema dalla domanda '+n);save();alert('Problema aggiunto alla scheda cliente.')}
+function completeInterview(){cur.interview.completed=true;cur.interview.completedAt=new Date().toISOString();logEvent(cur.id,'Intervista completata');save();openClient(cur.id,'analysis',true)}
+
+function questionnaireStatusText(c){
+  const q=c.questionnaire;
+  if(!q)return 'Non ancora inviato.';
+  if(q.status==='Compilato')return 'Risposte ricevute'+(q.completedAt?' · '+fmt(q.completedAt):'')+'.';
+  if(q.status==='In compilazione')return 'Il cliente ha aperto il questionario e lo sta compilando.';
+  if(q.status==='Inviato')return 'Inviato'+(q.sentAt?' · '+fmt(q.sentAt):'')+'.';
+  return 'Pronto per essere inviato al cliente.';
+}
+function questionnaireAnswerText(n){
+  const q=cur?.questionnaire||{};
+  const v=q.answers?.[n];
+  const base=Array.isArray(v)?v.filter(Boolean).join(', '):String(v||'');
+  const note=q.notes?.[n];
+  return base+(note?' — '+note:'');
+}
+function viewQuestionnaireAnswers(){
+  if(!cur?.questionnaire)return;
+  title.textContent='Risposte questionario';
+  crumb.textContent='Clienti / '+cur.name;
+  let out=`<div class=card><div class="row between"><div><h2>${esc(cur.name)}</h2><div class=mut>Questionario compilato ${cur.questionnaire.completedAt?'· '+fmt(cur.questionnaire.completedAt):''}</div></div><span class="pill green">Compilato</span></div></div>`;
+  SELFQ.forEach(q=>{
+    const text=questionnaireAnswerText(q.n);
+    if(!text.trim())return;
+    out+=`<div class=qcard><h3>${q.n}. ${esc(q.q)}</h3><div class=item>${esc(text)}</div><button onclick="problemFromQuestionnaire(${q.n},'${q.q.replaceAll("'","\\'")}')">＋ Crea problema</button></div>`;
+  });
+  out+=`<div class=sticky><button onclick="openClient(cur.id,'analysis',true)">Torna all'analisi</button></div>`;
+  view.innerHTML=out;
+  window.scrollTo(0,0);
+}
+function problemFromQuestionnaire(n,q){
+  const txt=questionnaireAnswerText(n);
+  if(!txt.trim())return;
+  cur.problems=cur.problems||[];
+  cur.problems.push({title:q,description:txt,priority:'Media',solution:'',status:'Da analizzare',source:'Questionario cliente · domanda '+n});
+  logEvent(cur.id,'Creato problema dal questionario · domanda '+n);
+  save();
+  alert('Problema aggiunto alla scheda cliente.');
+}
+
+async function prepareQuestionnaire(){
+  const q=ensureQuestionnaireLocal(cur);
+  const online=await createOnlineQuestionnaire(cur);
+  const base=publicBaseUrl();
+  const link=(online.ok&&base)?base+'?questionario='+encodeURIComponent(q.token):'';
+  const msg=`Ciao ${cur.contact||''}, ti invio un breve questionario per capire meglio come viene gestita la tua attività e quali aspetti potrebbero essere migliorati. Puoi compilarlo direttamente da questo link: ${link||'[link disponibile dopo la configurazione online]'}`;
+  show(`<h2>Invia questionario</h2>
+    <label>Messaggio</label><textarea id=shareMsg>${esc(msg)}</textarea>
+    <label>Link personale</label><input id=shareLink value="${esc(link||'Configurazione online necessaria')}" readonly>
+    <div class=row>
+      <button class=primary ${link?'':'disabled'} onclick=shareQuestionnaire()>Condividi</button>
+      <button ${link?'':'disabled'} onclick=copyQuestionnaire()>Copia link</button>
+    </div>
+    ${link?'<p class=mut>Il link è personale per questo cliente. Quando lo apre, lo stato passerà automaticamente a “In compilazione”; all’invio delle risposte passerà a “Compilato”.</p>':'<p class=mut>La parte grafica è pronta. Per generare un link realmente utilizzabile da un altro telefono bisogna collegare una volta il backend gratuito incluso nel pacchetto V11.</p>'}`);
+}
+async function shareQuestionnaire(){
+  const text=shareMsg.value,link=shareLink.value;
+  if(!link.startsWith('http'))return;
+  await markQuestionnaireSent(cur);
+  modal.close();
+  if(navigator.share){
+    try{await navigator.share({title:'Questionario ClientPro',text,url:link})}catch(e){}
+  }else{
+    await navigator.clipboard.writeText(text);
+    alert('Messaggio e link copiati.');
+  }
+  if(activeView==='client'&&cur&&tab==='analysis')renderClient();
+}
+async function copyQuestionnaire(){
+  const link=shareLink.value;
+  if(!link.startsWith('http'))return;
+  await navigator.clipboard.writeText(link);
+  await markQuestionnaireSent(cur);
+  alert('Link copiato.');
+  if(activeView==='client'&&cur&&tab==='analysis')renderClient();
+}
+function previewQuestionnaire(){renderSelfQuestionnaire(false);window.scrollTo(0,0);pushRoute({view:'questionnairePreview',clientId:cur.id})}
+function renderSelfQuestionnaire(publicMode=false){let qa=cur?.questionnaire?.answers||{},qn=cur?.questionnaire?.notes||{};title.textContent='Questionario cliente';crumb.textContent=publicMode?'ClientPro / Questionario':'Clienti / '+cur.name;let out=`<div class=card><h2>Questionario – Organizzazione dell'attività</h2><p class=mut>Rispondi pensando a come lavorate realmente oggi. Non esistono risposte giuste o sbagliate.</p></div>`;SELFQ.forEach(q=>out+=renderSelfQuestion(q,qa,qn,publicMode));out+=`<div class=sticky><button onclick="${publicMode?'submitPublicQuestionnaire()':"openClient(cur.id,'analysis',true)"}">${publicMode?'Invia risposte':'Torna alla scheda cliente'}</button></div>`;view.innerHTML=out}
+function renderSelfQuestion(q,a,n,publicMode){let v=a[q.n],h=`<div class=qcard><h3>${q.n}. ${esc(q.q)}</h3>`;let pref=publicMode?'pub':'self';
+if(q.type==='text'||q.type==='long')h+=`<textarea class="${q.type==='long'?'long':''}" oninput="${pref}Ans(${q.n},this.value)">${esc(v||'')}</textarea>`;
+if(q.type==='single'||q.type==='multi')h+=`<div class=checks>${q.options.map(o=>`<label class=check><input type="${q.type==='single'?'radio':'checkbox'}" name="${pref}${q.n}" ${(q.type==='single'?v===o:(v||[]).includes(o))?'checked':''} onchange="${pref}Choice(${q.n},'${o.replaceAll("'","\\'")}','${q.type}',this.checked)"> ${esc(o)}</label>`).join('')}</div><textarea placeholder="Dettagli (facoltativo)" oninput="${pref}Note(${q.n},this.value)">${esc(n[q.n]||'')}</textarea>`;
+if(q.type==='triple'){let t=v||['','',''];h+=`<input placeholder="1°" value="${esc(t[0])}" oninput="${pref}Triple(${q.n},0,this.value)"><input placeholder="2°" value="${esc(t[1])}" oninput="${pref}Triple(${q.n},1,this.value)"><input placeholder="3°" value="${esc(t[2])}" oninput="${pref}Triple(${q.n},2,this.value)">`}return h+'</div>'}
+function ensureQ(){cur.questionnaire=cur.questionnaire||{status:'Non inviato',answers:{},notes:{}}}
+function selfAns(n,v){ensureQ();cur.questionnaire.answers[n]=v;save()}function selfNote(n,v){ensureQ();cur.questionnaire.notes[n]=v;save()}function selfChoice(n,o,t,ch){ensureQ();if(t==='single')cur.questionnaire.answers[n]=o;else{let a=cur.questionnaire.answers[n]||[];if(ch&&!a.includes(o))a.push(o);if(!ch)a=a.filter(x=>x!==o);cur.questionnaire.answers[n]=a}save()}function selfTriple(n,i,v){ensureQ();let a=cur.questionnaire.answers[n]||['','',''];a[i]=v;cur.questionnaire.answers[n]=a;save()}
+let publicData={answers:{},notes:{},triple:{}};function pubAns(n,v){publicData.answers[n]=v}function pubNote(n,v){publicData.notes[n]=v}function pubChoice(n,o,t,ch){if(t==='single')publicData.answers[n]=o;else{let a=publicData.answers[n]||[];if(ch&&!a.includes(o))a.push(o);if(!ch)a=a.filter(x=>x!==o);publicData.answers[n]=a}}function pubTriple(n,i,v){let a=publicData.answers[n]||['','',''];a[i]=v;publicData.answers[n]=a}
+async function submitPublicQuestionnaire(){
+  const token=new URLSearchParams(location.search).get('questionario');
+  try{
+    await submitPublicOnline(token,publicData.answers,publicData.notes);
+    view.innerHTML=`<div class=card style="max-width:700px;margin:40px auto;text-align:center;padding:34px"><h2>Questionario inviato ✓</h2><p class=mut>Grazie. Le risposte sono state inviate correttamente.</p></div>`;
+    title.textContent='Questionario completato';
+  }catch(e){
+    console.error(e);
+    alert('Non riesco a inviare le risposte. Controlla la connessione e riprova.');
+  }
+}
+function show(h){modalBody.innerHTML=h;modal.showModal();requestAnimationFrame(()=>{try{modal.scrollTop=0;modalBody.scrollTop=0}catch(e){}})}
+function newClient(){show(`<h2>Nuovo cliente</h2><label>Nome attività *</label><input id=n><label>Referente</label><input id=r><label>Telefono</label><input id=ph><label>E-mail</label><input id=em><label>Settore</label><input id=se><div class=section>INDIRIZZO ATTIVITÀ</div><label>Via e numero civico</label><input id=adst><div class=grid2><div><label>CAP</label><input id=adzip></div><div><label>Città</label><input id=adcity></div></div><label>Provincia</label><input id=adprov placeholder="es. MI"><label>Sede operativa diversa (facoltativo)</label><input id=adop><label>Link Google Maps (facoltativo)</label><input id=admap placeholder="https://..."><label>Note</label><textarea id=no></textarea><button class=primary onclick=saveClient()>Salva cliente</button>`)}
+function saveClient(){
+  if(!n.value.trim())return alert('Inserisci il nome attività.');
+  let c={id:crypto.randomUUID(),name:n.value.trim(),contact:r.value,phone:ph.value,email:em.value,sector:se.value,notes:no.value,status:'Nuovo contatto',next:'Fare prima analisi',archived:false,address:{street:adst.value,zip:adzip.value,city:adcity.value,province:adprov.value,operational:adop.value,mapsUrl:admap.value},hourlyRate:'',problems:[],projects:[]};
+  db.clients.push(c);logEvent(c.id,'Cliente creato');save();modal.close();openClient(c.id)
+}
+function editClient(){
+  ensureClientData(cur);
+  show(`<h2>Modifica cliente</h2><label>Nome attività *</label><input id=en value="${esc(cur.name||'')}"><label>Referente</label><input id=er value="${esc(cur.contact||'')}"><label>Telefono</label><input id=eph value="${esc(cur.phone||'')}"><label>E-mail</label><input id=eem value="${esc(cur.email||'')}"><label>Settore</label><input id=ese value="${esc(cur.sector||'')}"><div class=section>INDIRIZZO ATTIVITÀ</div><label>Via e numero civico</label><input id=eadst value="${esc(cur.address.street||'')}"><div class=grid2><div><label>CAP</label><input id=eadzip value="${esc(cur.address.zip||'')}"></div><div><label>Città</label><input id=eadcity value="${esc(cur.address.city||'')}"></div></div><label>Provincia</label><input id=eadprov value="${esc(cur.address.province||'')}"><label>Sede operativa diversa (facoltativo)</label><input id=eadop value="${esc(cur.address.operational||'')}"><label>Link Google Maps (facoltativo)</label><input id=eadmap value="${esc(cur.address.mapsUrl||'')}"><div class=section>GESTIONE</div><label>Stato</label><select id=st>${['Nuovo contatto','Analisi','Proposta','Cliente','Progetto attivo','Concluso'].map(x=>`<option ${cur.status===x?'selected':''}>${x}</option>`).join('')}</select><label>Prossima azione</label><input id=nx value="${esc(cur.next||'')}"><label>Note</label><textarea id=nt>${esc(cur.notes||'')}</textarea><div class="softActions"><button class=primary onclick=saveEdit()>Salva</button><button class=dangerBtn onclick="modal.close();setTimeout(deleteClient,50)">Elimina cliente</button></div>`)
+}
+function saveEdit(){
+  if(!en.value.trim())return alert('Inserisci il nome attività.');
+  cur.name=en.value.trim();cur.contact=er.value;cur.phone=eph.value;cur.email=eem.value;cur.sector=ese.value;cur.status=st.value;cur.next=nx.value;cur.notes=nt.value;
+  cur.address={street:eadst.value,zip:eadzip.value,city:eadcity.value,province:eadprov.value,operational:eadop.value,mapsUrl:eadmap.value};
+  logEvent(cur.id,'Scheda cliente aggiornata');save();modal.close();title.textContent=cur.name;renderClient()
+}
+function archiveClient(){
+  if(!cur||cur.archived)return;
+  const open=openProjectsFor(cur);
+  if(open.length&&!confirm(`Ci sono ${open.length} progetti non conclusi. Vuoi archiviare comunque il cliente?`))return;
+  if(!open.length&&!confirm(`Spostare "${cur.name}" tra i clienti conclusi? Tutto lo storico resterà disponibile.`))return;
+  closeTimeSession('cliente-concluso');activeProjectId='';
+  cur.archived=true;cur.archivedAt=new Date().toISOString();cur.status='Concluso';cur.next='';
+  logEvent(cur.id,'Cliente concluso e spostato in archivio');save();renderClient()
+}
+function reactivateClient(){
+  if(!cur||!cur.archived)return;
+  const completed=(cur.projects||[]).filter(p=>p.status==='Completato'||(p.closures||[]).length);
+  show(`<h2>Nuovo lavoro per ${esc(cur.name)}</h2><p class=mut>Scegli come gestire la nuova richiesta senza perdere lo storico precedente.</p><div class=list>
+    <button class=item onclick="chooseResumeProject()">↶ <b>Riprendi un progetto precedente</b><br><span class=mut>Correggi o continui un lavoro già concluso.</span></button>
+    <button class=item onclick="chooseAssistanceProject()">🛠 <b>Assistenza / modifica</b><br><span class=mut>Crea un intervento separato collegato a un vecchio progetto.</span></button>
+    <button class=item onclick="reactivateWithNewProject()">＋ <b>Nuovo progetto</b><br><span class=mut>Il nuovo lavoro non dipende da quelli precedenti.</span></button>
+  </div>${completed.length?'':`<p class=mut>Non risultano progetti precedenti conclusi: puoi creare direttamente un nuovo progetto.</p>`}`)
+}
+function activateClientBase(){
+  cur.archived=false;cur.archivedAt='';cur.status='Cliente';cur.next='Definire il nuovo lavoro';logEvent(cur.id,'Cliente riattivato');save();
+}
+function chooseResumeProject(){
+  const list=(cur.projects||[]).filter(p=>p.status==='Completato'||(p.closures||[]).length);
+  if(!list.length)return alert('Non ci sono progetti precedenti da riaprire.');
+  show(`<h2>Riprendi progetto precedente</h2><label>Progetto</label><select id=resumePid>${list.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('')}</select><button class=primary onclick=resumeSelectedProject()>Riprendi progetto</button>`)
+}
+function resumeSelectedProject(){
+  const p=projectById(cur,resumePid.value);if(!p)return;
+  activateClientBase();p.status='In corso';p.completedAt='';p.relationType=p.relationType||'new';logEvent(cur.id,'Riaperto progetto “'+p.name+'”',p.id);save();modal.close();tab='projects';renderClient();setTimeout(()=>openProject(p.id),30)
+}
+function chooseAssistanceProject(){
+  const list=(cur.projects||[]).filter(p=>(p.closures||[]).length||p.status==='Completato');
+  if(!list.length)return alert('Non ci sono progetti precedenti a cui collegare l’assistenza.');
+  show(`<h2>Assistenza / modifica</h2><label>Collega al progetto</label><select id=assistPid>${list.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('')}</select><label>Nome intervento</label><input id=assistName placeholder="es. Modifica gestione magazzino"><label>Descrizione</label><textarea id=assistDesc></textarea><button class=primary onclick=createAssistanceProject()>Crea intervento</button>`)
+}
+function createAssistanceProject(){
+  const parent=projectById(cur,assistPid.value);if(!parent)return;
+  activateClientBase();
+  const p={id:crypto.randomUUID(),name:assistName.value.trim()||('Assistenza – '+parent.name),description:assistDesc.value,status:'In corso',startedAt:new Date().toISOString(),completedAt:'',relationType:'assistance',parentProjectId:parent.id,closures:[]};
+  cur.projects.push(p);cur.status='Progetto attivo';logEvent(cur.id,'Creato intervento collegato a “'+parent.name+'”',p.id);save();modal.close();tab='projects';renderClient();setTimeout(()=>openProject(p.id),30)
+}
+function reactivateWithNewProject(){activateClientBase();modal.close();newProject()}
+
+async function deleteClient(){
+  if(!cur)return;
+  const clientId=cur.id;
+  const name=cur.name;
+
+  if(!confirm(`Eliminare definitivamente "${name}"?\n\nVerranno rimossi anche attività, storico e questionario collegati.`))return;
+
+  try{
+    if(backendReady() && authUser && cur.questionnaire?.token){
+      const {error}=await SB.rpc('cp_delete_questionnaire',{p_token:cur.questionnaire.token});
+      if(error)console.error(error);
+    }
+  }catch(e){console.error(e)}
+
+  db.tasks=db.tasks.filter(t=>t.clientId!==clientId);
+  db.history=db.history.filter(h=>h.clientId!==clientId);
+  db.timeEntries=(db.timeEntries||[]).filter(e=>e.clientId!==clientId);
+  db.clients=db.clients.filter(c=>c.id!==clientId);
+  save();
+
+  cur=null;
+  alert(`Cliente "${name}" eliminato.`);
+  go('clients',true);
+}
+
+function newProblem(){show(`<h2>Nuovo problema</h2><label>Titolo *</label><input id=pt><label>Descrizione / situazione attuale</label><textarea id=pd></textarea><label>Priorità</label><select id=pp><option>Alta</option><option selected>Media</option><option>Bassa</option></select><button class=primary onclick=saveProblem()>Aggiungi problema</button>`)}
+function saveProblem(){if(!pt.value.trim())return;cur.problems.push({title:pt.value,description:pd.value,priority:pp.value,solution:'',status:'Da analizzare'});logEvent(cur.id,'Creato problema “'+pt.value+'”');save();modal.close();renderClient()}
+function openProblem(i){let p=cur.problems[i];if(cur.archived){show(`<h2>${esc(p.title)}</h2><div class=mut>Priorità: ${esc(p.priority)}${p.source?' · '+esc(p.source):''}</div><p>${esc(p.description)}</p><div class=section>SOLUZIONE</div><div class=item>${esc(p.solution||'Nessuna soluzione registrata')}</div><p><span class=pill>${esc(p.status)}</span></p><button onclick="modal.close()">Chiudi</button>`);return}show(`<h2>${esc(p.title)}</h2><div class=mut>Priorità: ${esc(p.priority)}${p.source?' · '+esc(p.source):''}</div><p>${esc(p.description)}</p><label>Soluzione</label><textarea id=sol>${esc(p.solution||'')}</textarea><label>Stato</label><select id=pst>${['Da analizzare','Soluzione individuata','In lavorazione','Risolto'].map(x=>`<option ${p.status===x?'selected':''}>${x}</option>`).join('')}</select><button class=primary onclick="updateProblem(${i})">Salva</button>`)}
+function updateProblem(i){let old=cur.problems[i].status;cur.problems[i].solution=sol.value;cur.problems[i].status=pst.value;if(old!==pst.value)logEvent(cur.id,'Problema “'+cur.problems[i].title+'” → '+pst.value);save();modal.close();renderClient()}
+function newProject(){
+  if(!cur)return;
+  if(cur.archived)return alert('Riattiva prima il cliente.');
+  show(`<h2>Nuovo progetto</h2><label>Nome *</label><input id=pn><label>Descrizione</label><textarea id=pdesc></textarea><label>Stato</label><select id=pstate><option>Da fare</option><option>In corso</option><option>Da far provare</option><option>Modifiche richieste</option></select><button class=primary onclick=saveProject()>Crea progetto</button>`)
+}
+function saveProject(){
+  if(!pn.value.trim())return alert('Inserisci il nome del progetto.');
+  const p={id:crypto.randomUUID(),name:pn.value.trim(),description:pdesc.value,status:pstate.value,startedAt:new Date().toISOString(),completedAt:'',relationType:'new',parentProjectId:'',closures:[]};
+  cur.projects.push(p);cur.status='Progetto attivo';logEvent(cur.id,'Creato progetto “'+p.name+'”',p.id);save();modal.close();renderClient()
+}
+function openProject(projectId){
+  if(!cur)return;
+  const p=projectById(cur,projectId);if(!p)return;
+  ensureProjectData(p,cur);activeProjectId=p.id;syncTimeContext();
+  const parent=p.parentProjectId?projectById(cur,p.parentProjectId):null;
+  const closures=(p.closures||[]).slice().reverse();
+  const projectEvents=db.history.filter(h=>h.clientId===cur.id&&h.projectId===p.id).slice(0,12);
+  const pTasks=db.tasks.filter(t=>t.clientId===cur.id&&t.projectId===p.id);
+  const tracked=projectTimeMs(cur,p);
+  const ro=!!cur.archived;
+  show(`<div class=modalHead><div><h2>${esc(p.name)}</h2><div class=mut>${projectLabel(p)}${parent?' · collegato a '+esc(parent.name):''}</div></div><button class=modalClose onclick="closeProjectModal()" aria-label="Chiudi">×</button></div>
+  <label>Descrizione</label><textarea id=projDesc ${ro?'disabled':''}>${esc(p.description||'')}</textarea><label>Stato</label><select id=projState ${ro?'disabled':''}>${['Da fare','In corso','Da far provare','Modifiche richieste','Completato'].map(x=>`<option ${p.status===x?'selected':''}>${x}</option>`).join('')}</select>
+  <div class=summaryGrid><div class=summaryBox><small>Tempo tracciato</small><b>${formatDuration(tracked)}</b></div><div class=summaryBox><small>Tariffa attuale</small><b>${Number(cur.hourlyRate)?moneyFmt(cur.hourlyRate)+'/h':'—'}</b></div><div class=summaryBox><small>Attività</small><b>${pTasks.length}</b></div><div class=summaryBox><small>Consuntivi</small><b>${closures.length}</b></div></div>
+  <div class=softActions>${ro?`<button onclick="closeProjectModal()">Chiudi</button>`:`<button class=primary onclick="saveProjectEdit('${p.id}')">Salva modifiche</button><button onclick="newTask('${cur.id}','${p.id}')">＋ Attività collegata</button>${p.status!=='Completato'?`<button onclick="prepareCloseProject('${p.id}')">✓ Concludi lavoro</button>`:`<button onclick="reopenProjectDirect('${p.id}')">↶ Riapri progetto</button>`}`}</div>
+  <div class=section>CONSUNTIVI</div>${closures.length?closures.map(s=>closureSummaryHTML(cur,p,s)).join(''):'<div class=mut>Nessun consuntivo ancora.</div>'}
+  <div class=section>STORICO PROGETTO</div>${projectEvents.length?projectEvents.map(h=>`<div class=item><b>${esc(h.text)}</b><div class=mut>${fmt(h.date)}</div></div>`).join(''):'<div class=mut>Nessun evento specifico.</div>'}`)
+}
+function closeProjectModal(){activeProjectId='';modal.close();syncTimeContext()}
+function saveProjectEdit(id){
+  const p=projectById(cur,id);if(!p)return;
+  const old=p.status;p.description=projDesc.value;p.status=projState.value;
+  if(old!==p.status)logEvent(cur.id,'Progetto “'+p.name+'” → '+p.status,p.id);
+  save();closeProjectModal();renderClient()
+}
+function reopenProjectDirect(id){
+  const p=projectById(cur,id);if(!p)return;
+  p.status='In corso';p.completedAt='';if(cur.archived){cur.archived=false;cur.archivedAt='';cur.status='Progetto attivo'}
+  logEvent(cur.id,'Riaperto progetto “'+p.name+'”',p.id);save();closeProjectModal();renderClient()
+}
+function prepareCloseProject(id){
+  closeTimeSession('chiusura-progetto');
+  const p=projectById(cur,id);if(!p)return;
+  const autoMs=projectTimeMs(cur,p),hours=(autoMs/3600000);
+  const rate=Number(cur.hourlyRate)||0,estimated=hours*rate;
+  show(`<h2>Concludi lavoro</h2><p><b>${esc(p.name)}</b></p><p class=mut>Il consuntivo viene salvato nello storico e non verrà ricalcolato quando cambierai tariffa.</p>
+  <label>Ore da consuntivare</label><input id=closeHours type=number min=0 step=0.25 value="${hours?hours.toFixed(2):'0'}"><label>Tariffa €/ora</label><input id=closeRate type=number min=0 step=0.5 value="${rate||0}">
+  <label>Importo concordato (facoltativo)</label><input id=closeAgreed type=number min=0 step=0.01 placeholder="${estimated.toFixed(2)}"><label>Importo già incassato (facoltativo)</label><input id=closeCollected type=number min=0 step=0.01 placeholder="0">
+  <label>Risultato / note finali</label><textarea id=closeResult placeholder="Cosa è stato consegnato o risolto?"></textarea>
+  <button class=primary onclick="finalizeProject('${p.id}')">Salva consuntivo e concludi</button>`)
+}
+function finalizeProject(id){
+  const p=projectById(cur,id);if(!p)return;
+  const h=Math.max(0,Number(closeHours.value)||0),rate=Math.max(0,Number(closeRate.value)||0),durationMs=Math.round(h*3600000),estimatedValue=h*rate;
+  const agreed=closeAgreed.value===''?'':Math.max(0,Number(closeAgreed.value)||0),collected=closeCollected.value===''?0:Math.max(0,Number(closeCollected.value)||0);
+  const resolved=(cur.problems||[]).filter(x=>x.status==='Risolto').map(x=>x.title);
+  const doneTasks=db.tasks.filter(t=>t.clientId===cur.id&&t.projectId===p.id&&t.done).map(t=>t.title);
+  const snap={id:crypto.randomUUID(),startedAt:p.startedAt||new Date().toISOString(),closedAt:new Date().toISOString(),durationMs,hourlyRate:rate,estimatedValue,agreedAmount:agreed,collectedAmount:collected,result:closeResult.value,resolvedProblems:resolved,completedTasks:doneTasks};
+  p.closures=p.closures||[];p.closures.push(snap);p.status='Completato';p.completedAt=snap.closedAt;
+  logEvent(cur.id,`Concluso progetto “${p.name}” · ${formatDuration(durationMs)} · ${moneyFmt(estimatedValue)}`,p.id);
+  save();modal.close();activeProjectId='';tab='projects';renderClient();syncTimeContext()
+}
+function newTask(cid='',projectId=''){
+  const clientOptions=db.clients.filter(c=>!c.archived||c.id===cid);
+  show(`<h2>Nuova attività</h2><label>Titolo *</label><input id=tt><label>Cliente</label><select id=tc onchange=refreshTaskProjects()><option value="">Nessuno</option>${clientOptions.map(c=>`<option value="${c.id}" ${cid===c.id?'selected':''}>${esc(c.name)}</option>`).join('')}</select><label>Progetto (facoltativo)</label><select id=tp><option value="">Nessun progetto</option></select><label>Scadenza</label><input type=date id=td><button class=primary onclick=saveTask()>Aggiungi</button>`);
+  setTimeout(()=>{refreshTaskProjects(projectId)},0)
+}
+function refreshTaskProjects(selected=''){
+  const sel=document.getElementById('tp');if(!sel)return;const c=db.clients.find(x=>x.id===tc.value);
+  sel.innerHTML='<option value="">Nessun progetto</option>'+(c?(c.projects||[]).map(p=>`<option value="${p.id}" ${selected===p.id?'selected':''}>${esc(p.name)}</option>`).join(''):'')
+}
+function saveTask(){if(!tt.value.trim())return;db.tasks.push({id:crypto.randomUUID(),title:tt.value,clientId:tc.value,projectId:tp?.value||'',date:td.value,done:false});if(tc.value)logEvent(tc.value,'Creata attività “'+tt.value+'”',tp?.value||'');save();modal.close();cur?renderClient():go('tasks')}
+function toggleTask(id){let t=db.tasks.find(x=>x.id===id);if(!t)return;t.done=!t.done;if(t.clientId)logEvent(t.clientId,(t.done?'Completata':'Riaperta')+' attività “'+t.title+'”',t.projectId||'');save();cur?renderClient():go('tasks')}
+function addDemo(){if(db.clients.length)return;let id=crypto.randomUUID();db.clients.push({id,name:'Studio Demo',contact:'Mario Rossi',phone:'333 1234567',email:'demo@example.it',sector:'Servizi',notes:'Cliente dimostrativo per provare ClientPro.',status:'Analisi',next:'Completare intervista',problems:[{title:'Gestione scorte',description:'Alcuni materiali finiscono senza preavviso.',priority:'Alta',solution:'',status:'Da analizzare'}],projects:[]});db.tasks.push({id:crypto.randomUUID(),title:'Completare intervista',clientId:id,date:'',done:false});logEvent(id,'Cliente demo creato');save()}
+
+const publicId=new URLSearchParams(location.search).get('questionario');
+(async()=>{
+  if(publicId){
+    title.textContent='Questionario cliente';
+    crumb.textContent='ClientPro / Questionario';
+    view.innerHTML='<div class="card empty">Caricamento questionario…</div>';
+    const info=await loadPublicQuestionnaire(publicId);
+    if(!info){
+      view.innerHTML='<div class="card empty">Questionario non disponibile. Controlla il link ricevuto.</div>';
+      return;
+    }
+    cur={name:info.client_name||'Questionario',contact:info.contact_name||'',questionnaire:{answers:{},notes:{}}};
+    renderSelfQuestionnaire(true);
+    return;
+  }
+
+  if(backendReady()){
+    const {data}=await SB.auth.getSession();
+    const recoveryRequested=new URLSearchParams(location.search).get('recovery')==='1';
+    if(recoveryRequested && data.session){showRecoveryPassword();return}
+    if(!data.session){showAuth('login');return}
+    authUser=data.session.user;
+    await ensureWorkspace();
+    await loadCloudState();
+  }
+
+  ensureAllData();localStorage.setItem(STORE,JSON.stringify(db));
+  recoverTimeSession();
+
+  appRoutingEnabled=true;
+  try{history.replaceState({view:'section',page:'home'},'')}catch(e){}
+  applyTheme();
+  updateAccountUI();
+  lastSyncAt=backendReady()?new Date():null;
+  setSyncState(backendReady()?'ok':'local');
+  go('home',false);
+})();
+if(backendReady()){
+  SB.auth.onAuthStateChange((event,session)=>{
+    if(session?.user){authUser=session.user;updateAccountUI()}
+    if(event==='SIGNED_OUT'){authUser=null;setSyncState('error')}
+  });
+}
+['pointerdown','keydown','input','touchstart','scroll'].forEach(type=>document.addEventListener(type,noteUserActivity,{passive:true,capture:true}));
+window.addEventListener('focus',()=>{noteUserActivity();if(backendReady()&&authUser&&!localDirty)syncNow(false)});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'){closeTimeSession('pagina-nascosta');if(backendReady()&&authUser)saveCloudState(true)}else{syncTimeContext();if(backendReady()&&authUser&&!localDirty)syncNow(false)}});
+window.addEventListener('pagehide',()=>{closeTimeSession('chiusura-pagina');if(backendReady()&&authUser)saveCloudState(true)});
+modal.addEventListener('close',()=>{if(activeProjectId){activeProjectId='';syncTimeContext()}});
+if('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>r.update()).catch(console.warn);
+</script></body></html>
