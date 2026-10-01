@@ -503,7 +503,11 @@ dialog::backdrop{background:rgba(0,0,0,.72);backdrop-filter:blur(4px)}
 .syncDot{width:8px;height:8px;border-radius:50%;background:var(--muted);display:inline-block}
 .syncDot.saving{background:var(--orange)}.syncDot.ok{background:var(--green)}.syncDot.error{background:var(--red)}
 .betaBadge{font-size:10px;font-weight:900;letter-spacing:.08em;color:#87bcff;border:1px solid rgba(47,140,255,.22);background:rgba(47,140,255,.08);border-radius:999px;padding:4px 7px}
-@media(max-width:700px){.settingsGrid{grid-template-columns:1fr}.accountText{display:none}.installBtn{font-size:0}.installBtn.show:before{content:"↓";font-size:16px}}
+#modalBody{max-height:calc(90vh - 40px);overflow:auto;-webkit-overflow-scrolling:touch}
+.modalHead{position:sticky;top:-20px;z-index:10;display:flex;align-items:center;justify-content:space-between;gap:12px;background:linear-gradient(165deg,var(--panel),var(--bg2));padding:4px 0 12px;margin-bottom:4px}
+.modalHead h2{margin:0}.modalClose{min-width:42px;padding:8px 11px;font-size:18px}
+.syncActions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.syncTime{font-size:11px;color:var(--muted)}
+@media(max-width:700px){.settingsGrid{grid-template-columns:1fr}.accountText{display:none}.installBtn{font-size:0}.installBtn.show:before{content:"↓";font-size:16px}dialog{width:calc(100vw - 18px);max-height:calc(100dvh - 18px);padding:14px}#modalBody{max-height:calc(100dvh - 46px)}.modalHead{top:-14px;padding-top:4px}.settingBox{padding:13px}}
 </style>
 
 </head><body>
@@ -515,6 +519,7 @@ dialog::backdrop{background:rgba(0,0,0,.72);backdrop-filter:blur(4px)}
 <div class="top"><div><small id="crumb" class="mut">ClientPro</small><h1 id="title">Dashboard</h1></div><input class="topSearch" placeholder="Cerca clienti, progetti, attività..."><div class="actions">
 <button id="installBtn" class="installBtn" title="Installa ClientPro" onclick="installApp()">↓ <span class="accountText">Installa</span></button>
 <button title="Tema" onclick="toggleTheme()">◐</button>
+<span class="betaBadge" title="Versione installata">v12.5</span>
 <button class="accountBtn" title="Account e impostazioni" onclick="openAccountSettings()"><span class="avatar" id="accountAvatar">CP</span><span class="accountText" id="accountLabel">Account</span></button>
 <button class="primary" onclick="newClient()">＋ Nuovo cliente</button>
 </div></div><div id="offlineBanner" class="offlineBanner"></div><div id="view"></div></main>
@@ -534,7 +539,14 @@ let cloudSaveTimer=null;
 let cloudSaveRunning=false;
 let suppressCloudSave=false;
 let deferredInstallPrompt=null;
+let activeView='section';
+let lastSyncAt=null;
+let localDirty=false;
+const APP_VERSION='12.5';
 
+function syncTimeText(){
+  return lastSyncAt ? 'Ultima sincronizzazione: '+lastSyncAt.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'}) : 'Sincronizzazione non ancora completata';
+}
 function setSyncState(state){
   const b=document.getElementById('offlineBanner');
   if(!b)return;
@@ -544,13 +556,31 @@ function setSyncState(state){
     return;
   }
   if(!authUser){
-    b.className='offlineBanner';
-    b.innerHTML='';
+    b.className='offlineBanner show';
+    b.innerHTML='<span><i class="syncDot error"></i> Sessione non attiva</span><button onclick="location.reload()">Accedi di nuovo</button>';
     return;
   }
   const labels={saving:'Sincronizzazione…',ok:'Dati sincronizzati',error:'Errore di sincronizzazione'};
   b.className='offlineBanner show';
-  b.innerHTML=`<span><i class="syncDot ${state}"></i> ${labels[state]||'Cloud attivo'} · ${authUser.email||''}</span><span class="betaBadge">BETA</span>`;
+  const retry=state==='error'?'<button onclick="syncNow(true)">Riprova</button>':'<button onclick="syncNow(true)">Sincronizza ora</button>';
+  b.innerHTML=`<div class="syncActions"><span><i class="syncDot ${state}"></i> ${labels[state]||'Cloud attivo'} · ${authUser.email||''}</span><span class="syncTime">${syncTimeText()}</span>${retry}</div><span class="betaBadge">v${APP_VERSION}</span>`;
+}
+async function recoverCloudSession(){
+  if(!backendReady())return false;
+  try{
+    const {data,error}=await SB.auth.getSession();
+    if(error)throw error;
+    if(data?.session){authUser=data.session.user;return true}
+    const refreshed=await SB.auth.refreshSession();
+    if(refreshed.error||!refreshed.data?.session)throw (refreshed.error||new Error('Sessione scaduta'));
+    authUser=refreshed.data.session.user;
+    return true;
+  }catch(e){
+    console.error('Sessione cloud non valida',e);
+    authUser=null;
+    setSyncState('error');
+    return false;
+  }
 }
 function updateAccountUI(){
   const label=document.getElementById('accountLabel');
@@ -571,13 +601,18 @@ async function ensureWorkspace(){
   workspaceId=Array.isArray(data)?data[0]?.workspace_id:data?.workspace_id||data;
   return workspaceId;
 }
-async function loadCloudState(){
+async function loadCloudState(force=false){
   if(!backendReady()||!authUser)return false;
+  if((localDirty||cloudSaveRunning)&&!force)return false;
   if(!workspaceId)await ensureWorkspace();
   if(!workspaceId)return false;
   setSyncState('saving');
   const {data,error}=await SB.rpc('cp_load_workspace_state',{p_workspace_id:workspaceId});
-  if(error){console.error(error);setSyncState('error');return false}
+  if(error){
+    console.error(error);
+    if(String(error.code||'')==='42501'||/401|jwt|token|auth/i.test(error.message||''))await recoverCloudSession();
+    setSyncState('error');return false
+  }
   const row=Array.isArray(data)?data[0]:data;
   if(row?.payload&&Object.keys(row.payload).length){
     suppressCloudSave=true;
@@ -586,9 +621,11 @@ async function loadCloudState(){
     if(!db.theme)db.theme=localTheme||'dark';
     localStorage.setItem(STORE,JSON.stringify(db));
     suppressCloudSave=false;
+    localDirty=false;
   }else{
     await saveCloudState(true);
   }
+  lastSyncAt=new Date();
   setSyncState('ok');
   return true;
 }
@@ -604,10 +641,33 @@ async function saveCloudState(force=false){
   const payload=serializeState();
   const {error}=await SB.rpc('cp_save_workspace_state',{p_workspace_id:workspaceId,p_payload:payload});
   cloudSaveRunning=false;
-  if(error){console.error(error);setSyncState('error');return false}
+  if(error){
+    console.error(error);
+    if(String(error.code||'')==='42501'||/401|jwt|token|auth/i.test(error.message||''))await recoverCloudSession();
+    setSyncState('error');return false
+  }
+  localDirty=false;
+  lastSyncAt=new Date();
   setSyncState('ok');
   return true;
 }
+async function syncNow(manual=false){
+  if(!backendReady())return false;
+  if(!authUser && !(await recoverCloudSession())){if(manual)alert('La sessione è scaduta. Ricarica ClientPro e accedi di nuovo.');return false}
+  if(localDirty){
+    const saved=await saveCloudState(true);
+    if(!saved)return false;
+  }
+  const loaded=await loadCloudState(true);
+  if(loaded){
+    applyTheme();
+    if(activeView==='client'&&cur?.id){const id=cur.id, t=tab;cur=db.clients.find(c=>c.id===id)||null;if(cur)openClient(id,t,false);else go('clients',false)}
+    else if(activeView==='interview'&&cur?.id){const id=cur.id;cur=db.clients.find(c=>c.id===id)||null;if(cur)renderInterview();else go('clients',false)}
+    else if(activeView==='section')renderSection(document.querySelector('[data-page].active')?.dataset.page||'home');
+  }
+  return loaded;
+}
+
 
 
 const ONLINE_CFG=window.CLIENTPRO_CONFIG||{};
@@ -674,7 +734,7 @@ async function syncQuestionnaire(clientId,rerender=true){
   if(row.notes)c.questionnaire.notes=row.notes;
   save();
   if(before!==c.questionnaire.status&&c.questionnaire.status==='Compilato')logEvent(c.id,'Questionario compilato dal cliente');
-  if(rerender&&cur?.id===c.id&&tab==='analysis')renderClient();
+  if(rerender&&activeView==='client'&&cur?.id===c.id&&tab==='analysis')renderClient();
   return true;
 }
 async function loadPublicQuestionnaire(token){
@@ -697,7 +757,7 @@ async function submitPublicOnline(token,answers,notes){
 }
 
 let cur=null,tab='overview';
-const save=()=>{localStorage.setItem(STORE,JSON.stringify(db));scheduleCloudSave()};
+const save=()=>{localDirty=true;localStorage.setItem(STORE,JSON.stringify(db));scheduleCloudSave()};
 const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
 
 
@@ -736,6 +796,7 @@ function pushRoute(route, replace=false){
 }
 
 function renderSection(p){
+  activeView='section';
   cur=null;
   activate(p);
   crumb.textContent='ClientPro';
@@ -751,7 +812,7 @@ function restoreRoute(route){
   if(route.view==='client'){openClient(route.clientId,route.tab||'overview',false);return}
   if(route.view==='interview'){
     const c=db.clients.find(x=>x.id===route.clientId);
-    if(c){cur=c;tab='analysis';activate('');ensureInterview(cur);renderInterview();window.scrollTo(0,0)}
+    if(c){activeView='interview';cur=c;tab='interview';activate('');ensureInterview(cur);renderInterview();window.scrollTo(0,0)}
     else renderSection('clients');
     return;
   }
@@ -848,18 +909,20 @@ async function saveNewPassword(){
 
 async function openAccountSettings(){
   const cloud=backendReady();
-  show(`<h2>Account e impostazioni</h2>
+  show(`<div class="modalHead"><h2>Account e impostazioni</h2><button class="modalClose" onclick="modal.close()" aria-label="Chiudi">×</button></div>
     <div class="settingsGrid">
       <div class="settingBox"><h3>Account</h3><p>${cloud?(authUser?.email||'Cloud configurato'):'ClientPro è in modalità locale.'}</p>${cloud&&authUser?'<button onclick="doLogout()">Esci dall’account</button>':'<span class="cloudLocal">Cloud non configurato</span>'}</div>
-      <div class="settingBox"><h3>Sincronizzazione</h3><p>${cloud?'Clienti, interviste, problemi, progetti, attività e storico vengono sincronizzati nel tuo spazio personale.':'Per usare gli stessi dati su PC e smartphone collega il backend incluso nel pacchetto.'}</p><span class="${cloud?'cloudOk':'cloudLocal'}">${cloud?'● Cloud disponibile':'● Solo dispositivo'}</span></div>
+      <div class="settingBox"><h3>Sincronizzazione</h3><p>${cloud?'Clienti, interviste, problemi, progetti, attività e storico vengono sincronizzati nel tuo spazio personale.':'Per usare gli stessi dati su PC e smartphone collega il backend incluso nel pacchetto.'}</p><div class="syncActions"><span class="${cloud?'cloudOk':'cloudLocal'}">${cloud?'● Cloud disponibile':'● Solo dispositivo'}</span>${cloud?'<button onclick="syncNow(true)">Sincronizza ora</button>':''}</div><p class="syncTime" style="margin-top:8px">${syncTimeText()}</p></div>
       <div class="settingBox"><h3>Backup / esportazione</h3><p>Scarica una copia completa dei tuoi dati ClientPro.</p><button onclick="exportData()">Esporta dati</button></div>
       <div class="settingBox"><h3>Ripristino dati</h3><p>Importa un backup ClientPro precedentemente esportato.</p><input id="importFile" type="file" accept=".json,application/json" onchange="importData(this.files[0])"></div>
       <div class="settingBox"><h3>Installazione</h3><p>Installa ClientPro sul dispositivo per aprirla come una normale app.</p><button onclick="installApp()">Installa app</button></div>
-      <div class="settingBox"><h3>Versione</h3><p>ClientPro Commercial Beta 12.4<br>Base stabile per test reali e primi utenti.</p><span class="betaBadge">COMMERCIAL BETA</span></div>
+      <div class="settingBox"><h3>Versione</h3><p>ClientPro Commercial Beta 12.5<br>Aggiornamento di stabilizzazione PC + smartphone.</p><span class="betaBadge">COMMERCIAL BETA · v12.5</span></div>
     </div>`);
+  requestAnimationFrame(()=>{try{modal.scrollTop=0;modalBody.scrollTop=0}catch(e){}});
 }
+
 function exportData(){
-  const blob=new Blob([JSON.stringify({exportedAt:new Date().toISOString(),version:'12.4',data:db},null,2)],{type:'application/json'});
+  const blob=new Blob([JSON.stringify({exportedAt:new Date().toISOString(),version:'12.5',data:db},null,2)],{type:'application/json'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='ClientPro_backup_'+new Date().toISOString().slice(0,10)+'.json';a.click();URL.revokeObjectURL(a.href);
 }
 async function importData(file){
@@ -988,7 +1051,7 @@ function analysis(){let a=db.clients.filter(c=>c.interview||c.questionnaire);vie
 function projects(){let a=db.clients.flatMap(c=>(c.projects||[]).map(p=>({c,p})));view.innerHTML=a.length?a.map(x=>`<div class=card><div class="row between"><div><b>${esc(x.p.name)}</b><div class=mut>${esc(x.c.name)}</div></div><span class=pill>${esc(x.p.status)}</span></div></div>`).join(''):'<div class="card empty">Nessun progetto.</div>'}
 function tasks(){view.innerHTML=`<div class="row between"><h3>Attività</h3><button class=primary onclick="newTask()">＋ Nuova attività</button></div>${taskList(db.tasks)}`}
 function taskList(a){return a.length?`<div class=list>${a.map(t=>{let c=db.clients.find(x=>x.id===t.clientId);return `<div class=item><div class="row between"><div><b style="${t.done?'text-decoration:line-through':''}">${esc(t.title)}</b><div class=mut>${c?esc(c.name)+' · ':''}${esc(t.date||'Senza scadenza')}</div></div><button onclick="toggleTask('${t.id}')">${t.done?'↶':'✓'}</button></div></div>`}).join('')}</div>`:'<div class=empty>Nessuna attività.</div>'}
-function openClient(id,t='overview',push=true){cur=db.clients.find(c=>c.id===id);if(!cur){go('clients',push);return}tab=t;activate('');crumb.textContent='Clienti / Scheda di lavoro';title.textContent=cur.name;renderClient();window.scrollTo(0,0);if(push)pushRoute({view:'client',clientId:id,tab:t})}
+function openClient(id,t='overview',push=true){activeView='client';cur=db.clients.find(c=>c.id===id);if(!cur){go('clients',push);return}tab=t;activate('');crumb.textContent='Clienti / Scheda di lavoro';title.textContent=cur.name;renderClient();window.scrollTo(0,0);if(push)pushRoute({view:'client',clientId:id,tab:t})}
 function switchClientTab(t,push=true){if(!cur)return;tab=t;renderClient();window.scrollTo(0,0);if(push)pushRoute({view:'client',clientId:cur.id,tab:t})}
 function renderClient(){let c=cur,ps=c.problems||[],prs=c.projects||[],hs=db.history.filter(h=>h.clientId===c.id).slice(0,8);
 view.innerHTML=`<div class=card><div class="row between"><div><h2>${esc(c.name)}</h2><div class=mut>${esc(c.contact||'Nessun referente')} ${c.phone?'· '+esc(c.phone):''} ${c.email?'· '+esc(c.email):''}</div><p><span class=pill>${esc(c.status)}</span></p></div><button onclick=editClient()>Modifica</button></div></div>
@@ -1024,16 +1087,17 @@ function startInterviewForClient(clientId,push=true){
   try{
     const c=db.clients.find(x=>x.id===clientId);
     if(!c){alert('Cliente non trovato.');return}
+    activeView='interview';
     cur=c;
-    tab='analysis';
+    tab='interview';
     ensureInterview(cur);
-    save();
     renderInterview();
     window.scrollTo(0,0);
+    save();
     if(push)pushRoute({view:'interview',clientId:cur.id});
   }catch(e){
     console.error('Errore apertura intervista',e);
-    alert('Non riesco ad aprire l’intervista. Chiudi e riapri ClientPro e riprova.');
+    alert('Errore apertura intervista: '+(e?.message||'errore sconosciuto'));
   }
 }
 
@@ -1041,7 +1105,7 @@ function startInterview(push=true){
   if(!cur || !cur.id){alert('Apri prima un cliente.');return}
   startInterviewForClient(cur.id,push);
 }
-function renderInterview(){ensureInterview(cur);let a=cur.interview.answers,n=cur.interview.notes;crumb.textContent='Clienti / '+cur.name;title.textContent='Intervista digitale';let out=`<div class=card><div class="row between"><div><b>${esc(cur.name)}</b><div class=mut>Salvataggio automatico</div></div><span class="pill blue">${interviewProgress(cur)}%</span></div><div class=progress><i style="width:${interviewProgress(cur)}%"></i></div></div>`;
+function renderInterview(){if(!cur||!cur.id){alert('Cliente non disponibile.');go('clients');return}activeView='interview';tab='interview';ensureInterview(cur);let a=cur.interview.answers,n=cur.interview.notes;crumb.textContent='Clienti / '+cur.name;title.textContent='Intervista digitale';let out=`<div class=card><div class="row between"><div><b>${esc(cur.name)}</b><div class=mut>Salvataggio automatico</div></div><span class="pill blue">${interviewProgress(cur)}%</span></div><div class=progress><i style="width:${interviewProgress(cur)}%"></i></div></div>`;
 INTERVIEW.forEach(sec=>{out+=`<div class=section>${esc(sec[0])}</div>`;sec[1].forEach(q=>{out+=renderQuestion(q,a,n,true)})});
 out+=`<div class=section>9. NOTE E ANALISI POST-INTERVISTA</div><div class=qcard><p class=mut>Da compilare dopo l'incontro. Prima descrivi ciò che hai osservato; solo dopo valuta una possibile soluzione.</p>${['Problemi osservati','Passaggi ripetuti / attività affidate alla memoria','Informazioni sparse tra strumenti diversi','Problema da affrontare per primo','Come viene gestito oggi','Possibile soluzione da valutare'].map((x,i)=>`<label>${x}</label><textarea oninput="postNote(${i},this.value)">${esc(cur.interview.post[i]||'')}</textarea>`).join('')}</div><div class=sticky><button onclick="openClient(cur.id,'analysis',true)">Salva e continua dopo</button><button class=primary onclick=completeInterview()>Completa intervista</button></div>`;view.innerHTML=out}
 function renderQuestion(q,a,n,withProblem){let v=a[q.n];let h=`<div class=qcard><h3>${q.n}. ${esc(q.q)}</h3>${q.hint?`<div class=mut>${esc(q.hint)}</div>`:''}`;
@@ -1122,7 +1186,7 @@ async function shareQuestionnaire(){
     await navigator.clipboard.writeText(text);
     alert('Messaggio e link copiati.');
   }
-  if(cur&&tab==='analysis')renderClient();
+  if(activeView==='client'&&cur&&tab==='analysis')renderClient();
 }
 async function copyQuestionnaire(){
   const link=shareLink.value;
@@ -1130,7 +1194,7 @@ async function copyQuestionnaire(){
   await navigator.clipboard.writeText(link);
   await markQuestionnaireSent(cur);
   alert('Link copiato.');
-  if(cur&&tab==='analysis')renderClient();
+  if(activeView==='client'&&cur&&tab==='analysis')renderClient();
 }
 function previewQuestionnaire(){renderSelfQuestionnaire(false);window.scrollTo(0,0);pushRoute({view:'questionnairePreview',clientId:cur.id})}
 function renderSelfQuestionnaire(publicMode=false){let qa=cur?.questionnaire?.answers||{},qn=cur?.questionnaire?.notes||{};title.textContent='Questionario cliente';crumb.textContent=publicMode?'ClientPro / Questionario':'Clienti / '+cur.name;let out=`<div class=card><h2>Questionario – Organizzazione dell'attività</h2><p class=mut>Rispondi pensando a come lavorate realmente oggi. Non esistono risposte giuste o sbagliate.</p></div>`;SELFQ.forEach(q=>out+=renderSelfQuestion(q,qa,qn,publicMode));out+=`<div class=sticky><button onclick="${publicMode?'submitPublicQuestionnaire()':"openClient(cur.id,'analysis',true)"}">${publicMode?'Invia risposte':'Torna alla scheda cliente'}</button></div>`;view.innerHTML=out}
@@ -1152,7 +1216,7 @@ async function submitPublicQuestionnaire(){
     alert('Non riesco a inviare le risposte. Controlla la connessione e riprova.');
   }
 }
-function show(h){modalBody.innerHTML=h;modal.showModal()}
+function show(h){modalBody.innerHTML=h;modal.showModal();requestAnimationFrame(()=>{try{modal.scrollTop=0;modalBody.scrollTop=0}catch(e){}})}
 function newClient(){show(`<h2>Nuovo cliente</h2><label>Nome attività *</label><input id=n><label>Referente</label><input id=r><label>Telefono</label><input id=ph><label>E-mail</label><input id=em><label>Settore</label><input id=se><label>Note</label><textarea id=no></textarea><button class=primary onclick=saveClient()>Salva cliente</button>`)}
 function saveClient(){if(!n.value.trim())return alert('Inserisci il nome attività.');let c={id:crypto.randomUUID(),name:n.value.trim(),contact:r.value,phone:ph.value,email:em.value,sector:se.value,notes:no.value,status:'Nuovo contatto',next:'Fare prima analisi',problems:[],projects:[]};db.clients.push(c);logEvent(c.id,'Cliente creato');save();modal.close();openClient(c.id)}
 function editClient(){show(`<h2>Modifica cliente</h2><label>Stato</label><select id=st>${['Nuovo contatto','Analisi','Proposta','Cliente','Progetto attivo','Concluso'].map(x=>`<option ${cur.status===x?'selected':''}>${x}</option>`).join('')}</select><label>Prossima azione</label><input id=nx value="${esc(cur.next||'')}"><label>Note</label><textarea id=nt>${esc(cur.notes||'')}</textarea><div class="row"><button class=primary onclick=saveEdit()>Salva</button><button style="border-color:rgba(255,90,90,.35);color:#ff8f8f" onclick="modal.close();setTimeout(deleteClient,50)">Elimina cliente</button></div>`)}
@@ -1223,8 +1287,17 @@ const publicId=new URLSearchParams(location.search).get('questionario');
   try{history.replaceState({view:'section',page:'home'},'')}catch(e){}
   applyTheme();
   updateAccountUI();
+  lastSyncAt=backendReady()?new Date():null;
   setSyncState(backendReady()?'ok':'local');
   go('home',false);
 })();
-if('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(console.warn);
+if(backendReady()){
+  SB.auth.onAuthStateChange((event,session)=>{
+    if(session?.user){authUser=session.user;updateAccountUI()}
+    if(event==='SIGNED_OUT'){authUser=null;setSyncState('error')}
+  });
+}
+window.addEventListener('focus',()=>{if(backendReady()&&authUser&&!localDirty)syncNow(false)});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&backendReady()&&authUser&&!localDirty)syncNow(false)});
+if('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>r.update()).catch(console.warn);
 </script></body></html>
