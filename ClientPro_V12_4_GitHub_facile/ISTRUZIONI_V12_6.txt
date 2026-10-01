@@ -1,0 +1,17 @@
+CLIENTPRO V12.6 - PUBBLICAZIONE
+
+1. Apri su GitHub la cartella del progetto ClientPro attualmente pubblicata.
+2. Sostituisci soltanto index.html e sw.js con i file di questo pacchetto.
+3. Conferma le modifiche sul ramo principale e attendi il deploy Vercel.
+4. Apri ClientPro, verifica che compaia v12.6 e ricarica una volta la pagina.
+
+PROVA RAPIDA
+
+- Apri un cliente e passa ad Analisi o Intervista: il conteggio parte automaticamente.
+- Passa a Problemi, Progetti o Attività: la sessione cambia categoria.
+- Torna alla Panoramica: trovi totale, suddivisione e tariffa oraria opzionale.
+- Non sono presenti pulsanti Avvia/Ferma.
+
+I dati del tempo fanno parte dello stesso workspace già sincronizzato. La struttura
+precedente di clienti, intervista, questionario, problemi, progetti e attività resta
+compatibile e viene completata automaticamente con i nuovi campi al primo avvio.

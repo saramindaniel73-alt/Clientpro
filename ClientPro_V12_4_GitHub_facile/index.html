@@ -571,6 +571,13 @@ dialog::backdrop{background:rgba(0,0,0,.72);backdrop-filter:blur(4px)}
   .mobileBrand{margin-bottom:8px !important}
 }
 </style>
+<style id="v126-time-tracking">
+.timeSummary{display:grid;grid-template-columns:minmax(190px,.8fr) 1.2fr;gap:12px;margin-bottom:12px}
+.timeTotal{font-size:30px;font-weight:900;margin:5px 0}.timeValue{color:var(--green);font-weight:850}
+.timeBreakdown{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px}
+.timeBreakdown .item{margin:0;padding:10px 12px}.rateRow{display:flex;align-items:center;gap:8px;margin-top:10px}.rateRow input{max-width:120px}
+@media(max-width:700px){.timeSummary{grid-template-columns:1fr}.timeBreakdown{grid-template-columns:1fr}.timeTotal{font-size:27px}}
+</style>
 </head><body>
 <div class="app">
 <aside class="side"><div class="brand click" onclick="go('home')"><div class="mark">CP</div>ClientPro</div><div class="miniLabel">AREA DI LAVORO</div><div class="nav">
@@ -579,7 +586,7 @@ dialog::backdrop{background:rgba(0,0,0,.72);backdrop-filter:blur(4px)}
 <main class="main"><div class="mobileBrand click" onclick="go('home')"><div class="mark">CP</div><b>ClientPro</b></div>
 <div class="top"><div><small id="crumb" class="mut">ClientPro</small><h1 id="title">Dashboard</h1></div><input class="topSearch" placeholder="Cerca clienti, progetti, attività..."><div class="actions">
 <button id="installBtn" class="installBtn" title="Installa ClientPro" onclick="installApp()">↓ <span class="accountText">Installa</span></button>
-<span class="betaBadge" title="Versione installata">v12.5.2</span>
+<span class="betaBadge" title="Versione installata">v12.6</span>
 <button class="accountBtn" title="Account e impostazioni" onclick="openAccountSettings()"><span class="avatar" id="accountAvatar">CP</span><span class="accountText" id="accountLabel">Account</span></button>
 <button class="primary" onclick="newClient()">＋ Nuovo cliente</button>
 </div></div><div id="offlineBanner" class="offlineBanner"></div><div id="view"></div></main>
@@ -592,7 +599,7 @@ dialog::backdrop{background:rgba(0,0,0,.72);backdrop-filter:blur(4px)}
 const INTERVIEW=[["1. CONOSCERE L'ATTIVITÀ", [{"n": 1, "q": "Raccontami come si svolge una normale giornata di lavoro, dall'apertura alla chiusura.", "type": "long", "hint": "Annota le attività principali, l'ordine in cui vengono svolte, chi se ne occupa e gli strumenti utilizzati."}]], ["2. ORGANIZZAZIONE GENERALE", [{"n": 2, "q": "Come sono suddivisi i compiti tra titolare e collaboratori?", "type": "text"}, {"n": 3, "q": "Quali strumenti utilizzate oggi per organizzare il lavoro?", "type": "multi", "options": ["Agenda cartacea", "WhatsApp/chat", "Calendario digitale", "Fogli/Excel", "Gestionale", "Altro"]}, {"n": 4, "q": "Se il titolare o il responsabile non fosse presente, cosa diventerebbe più difficile da gestire?", "type": "text"}, {"n": 5, "q": "Quali sono le cose che ti fanno perdere più tempo durante la settimana?", "type": "text"}]], ["3. PROBLEMI E ATTIVITÀ QUOTIDIANE", [{"n": 6, "q": "Quali problemi si ripetono più frequentemente?", "type": "text"}, {"n": 7, "q": "Quali cose capita più spesso di dimenticare?", "type": "text"}, {"n": 8, "q": "C'è qualcosa che fai ancora a memoria, su carta o tramite messaggi e che vorresti gestire meglio?", "type": "text"}, {"n": 9, "q": "Quando c'è molto lavoro, cosa diventa più difficile da gestire?", "type": "text"}, {"n": 10, "q": "Pensa all'ultima volta che qualcosa nella gestione è andato storto: cosa è successo e come avete risolto?", "type": "text"}]], ["4. APPUNTAMENTI, CLIENTI E ORGANIZZAZIONE", [{"n": 11, "q": "Gestite appuntamenti o prenotazioni?", "type": "single", "options": ["Sì", "No", "Solo in alcuni casi"]}, {"n": 12, "q": "Se sì, come vengono presi, modificati e confermati gli appuntamenti?", "type": "multi", "options": ["Agenda cartacea", "WhatsApp/chat", "Telefono", "Calendario digitale", "Gestionale", "Altro"]}, {"n": 13, "q": "Quali problemi capitano con appuntamenti o prenotazioni?", "type": "multi", "options": ["Nessuno", "Sovrapposizioni", "Cancellazioni", "No-show", "Ritardi", "Dimenticanze", "Altro"]}, {"n": 14, "q": "Come vengono raccolte e ritrovate le informazioni necessarie sul cliente?", "type": "text"}, {"n": 15, "q": "Ci sono lavori, materiali o attività da preparare prima dell'appuntamento? Come ricordate cosa deve essere pronto?", "type": "text"}]], ["5. MATERIALI, SCORTE E FORNITORI", [{"n": 16, "q": "Come gestite attualmente materiali e scorte?", "type": "multi", "options": ["A memoria", "Controllo visivo", "Carta", "Foglio/Excel", "App/gestionale", "Altro"]}, {"n": 17, "q": "Come vi accorgete che un prodotto o materiale sta finendo?", "type": "text"}, {"n": 18, "q": "Vi è mai capitato di rimanere senza qualcosa di necessario?", "type": "single", "options": ["Mai", "Raramente", "Qualche volta", "Spesso"]}, {"n": 19, "q": "I collaboratori hanno materiali personali o assegnati individualmente?", "type": "single", "options": ["Sì", "No", "In parte", "Non applicabile"]}, {"n": 20, "q": "Come vengono effettuati gli ordini ai fornitori?", "type": "text"}, {"n": 21, "q": "Ci sono prodotti per cui dovete controllare scadenza, lotto, quantità minima o altre informazioni?", "type": "single", "options": ["Sì", "No", "Solo alcuni", "Non applicabile"]}]], ["6. PAGAMENTI, COLLABORATORI E INFORMAZIONI", [{"n": 22, "q": "Gestite caparre, acconti o pagamenti anticipati?", "type": "single", "options": ["Sì", "No", "Solo in alcuni casi"]}, {"n": 23, "q": "Come controllate ciò che è stato pagato e ciò che resta da pagare?", "type": "text"}, {"n": 24, "q": "Come vengono organizzati collaboratori, turni e postazioni di lavoro?", "type": "text"}, {"n": 25, "q": "Quali informazioni devono poter vedere tutti e quali invece solo il titolare o determinate persone?", "type": "text"}, {"n": 26, "q": "Come vi scambiate le informazioni importanti durante la giornata?", "type": "multi", "options": ["A voce", "WhatsApp/chat", "Agenda", "Note", "E-mail", "Gestionale", "Altro"]}]], ["7. STRUMENTI E POSSIBILI MIGLIORAMENTI", [{"n": 27, "q": "Quali strumenti o applicazioni utilizzate già? Cosa funziona bene e cosa invece vi crea difficoltà?", "type": "text"}, {"n": 28, "q": "Su quali dispositivi sarebbe più comodo utilizzare un eventuale strumento digitale?", "type": "multi", "options": ["Smartphone", "Tablet", "PC", "Più dispositivi"]}, {"n": 29, "q": "Quali informazioni sull'andamento dell'attività vorresti conoscere più facilmente?", "type": "text"}, {"n": 30, "q": "Qual è una cosa che oggi funziona bene e che non vorresti cambiare?", "type": "text"}, {"n": 31, "q": "C'è qualcosa che non ti ho chiesto ma che crea difficoltà nella gestione quotidiana?", "type": "text"}]], ["8. PRIORITÀ", [{"n": 32, "q": "Se potessi eliminare soltanto tre problemi dalla gestione dell'attività, quali sceglieresti?", "type": "triple"}, {"n": 33, "q": "Se una soluzione digitale potesse risolvere perfettamente una sola cosa, quale dovrebbe essere?", "type": "text"}]]];
 const SELFQ=[{"n": 1, "q": "Quante persone lavorano normalmente nell'attività?", "type": "single", "options": ["1", "2–3", "4–6", "7–10", "Più di 10"]}, {"n": 2, "q": "Come sono organizzati i ruoli?", "type": "single", "options": ["Ognuno ha compiti abbastanza precisi", "Ci dividiamo i compiti in base alla giornata", "Una persona coordina quasi tutto", "Un po' di tutte queste situazioni", "Altro"]}, {"n": 3, "q": "Raccontaci brevemente come si svolge una normale giornata di lavoro, dall'apertura alla chiusura.", "type": "long"}, {"n": 4, "q": "Cosa utilizzate oggi per organizzare il lavoro?", "type": "multi", "options": ["Carta/agenda", "WhatsApp/chat", "Calendario digitale", "Excel/fogli", "Gestionale/app", "Memoria", "Altro"]}, {"n": 5, "q": "Quali attività vi fanno perdere più tempo?", "type": "text"}, {"n": 6, "q": "Cosa capita più facilmente di dimenticare o controllare in ritardo?", "type": "text"}, {"n": 7, "q": "Quando c'è molto lavoro, cosa diventa più difficile da gestire?", "type": "multi", "options": ["Appuntamenti", "Clienti", "Collaboratori", "Materiali", "Comunicazioni", "Pagamenti", "Preparazione del lavoro", "Altro"]}, {"n": 8, "q": "Gestite appuntamenti o prenotazioni?", "type": "single", "options": ["Sì", "No"]}, {"n": 9, "q": "Come li gestite?", "type": "multi", "options": ["Agenda", "WhatsApp/chat", "Telefono", "Calendario digitale", "Gestionale/app", "Altro"]}, {"n": 10, "q": "Quali problemi capitano?", "type": "multi", "options": ["Nessuno", "Cancellazioni", "Clienti che non si presentano", "Ritardi", "Sovrapposizioni", "Dimenticanze", "Informazioni mancanti", "Altro"]}, {"n": 11, "q": "Prima di un appuntamento dovete preparare materiali, informazioni o altro?", "type": "single", "options": ["Mai", "A volte", "Spesso", "Sempre"]}, {"n": 12, "q": "Come controllate oggi quello che avete disponibile?", "type": "multi", "options": ["A vista", "A memoria", "Carta", "Excel/foglio digitale", "App/gestionale", "Non abbiamo un sistema preciso", "Altro"]}, {"n": 13, "q": "Come capite quando qualcosa sta per finire?", "type": "multi", "options": ["Controllo periodico", "Ce ne accorgiamo utilizzandolo", "Una persona controlla", "Avviso automatico", "Non abbiamo un metodo preciso", "Altro"]}, {"n": 14, "q": "Negli ultimi mesi vi è capitato di rimanere senza qualcosa di necessario?", "type": "single", "options": ["Mai", "Una volta", "Qualche volta", "Spesso"]}, {"n": 15, "q": "Avete materiali comuni e materiali personali dei singoli collaboratori?", "type": "single", "options": ["Solo comuni", "Comuni + personali", "Solo personali", "Non applicabile"]}, {"n": 16, "q": "Chi può prendere o utilizzare i materiali?", "type": "single", "options": ["Tutti", "Solo alcune persone", "Dipende dal materiale"]}, {"n": 17, "q": "Come fate gli ordini ai fornitori?", "type": "multi", "options": ["Una persona controlla e ordina", "Lista cartacea", "Messaggi", "Excel", "Gestionale", "Quando qualcuno si accorge che manca qualcosa", "Altro"]}, {"n": 18, "q": "Ci sono informazioni sui prodotti che sarebbe utile controllare?", "type": "multi", "options": ["Quantità", "Scorta minima", "Scadenza", "Lotto", "Fornitore", "Prezzo", "Ultimo acquisto", "Altro"]}, {"n": 19, "q": "Come vi scambiate le informazioni importanti?", "type": "multi", "options": ["A voce", "WhatsApp/chat", "Carta/note", "Calendario", "Gestionale", "Altro"]}, {"n": 20, "q": "Capita che un'informazione non arrivi alla persona giusta?", "type": "single", "options": ["Mai", "Raramente", "A volte", "Spesso"]}, {"n": 21, "q": "Se il titolare/responsabile non fosse presente per qualche giorno, ci sarebbero cose difficili da gestire?", "type": "single", "options": ["No", "Qualcuna", "Diverse", "Molte"]}, {"n": 22, "q": "Gestite caparre, acconti o pagamenti da controllare?", "type": "single", "options": ["Sì", "No"]}, {"n": 23, "q": "Avete scadenze periodiche da ricordare?", "type": "single", "options": ["Sì", "No"]}, {"n": 24, "q": "Pensa all'ultima volta che qualcosa nell'organizzazione non ha funzionato come avrebbe dovuto. Cosa è successo?", "type": "long"}, {"n": 25, "q": "Quanto spesso si verificano problemi simili?", "type": "single", "options": ["Raramente", "Qualche volta al mese", "Ogni settimana", "Quasi ogni giorno"]}, {"n": 26, "q": "Generalmente questi problemi provocano:", "type": "multi", "options": ["Perdita di tempo", "Errori", "Stress organizzativo", "Spese aggiuntive", "Problemi con clienti", "Nessuna conseguenza importante", "Altro"]}, {"n": 27, "q": "Se potessi migliorare TRE cose nella gestione dell'attività, quali sarebbero?", "type": "triple"}, {"n": 28, "q": "Se uno strumento digitale potesse risolvere perfettamente UNA sola cosa, cosa vorresti che facesse?", "type": "long"}, {"n": 29, "q": "Qual è invece una cosa che oggi funziona bene e che NON vorresti cambiare?", "type": "text"}, {"n": 30, "q": "C'è qualcosa di importante sulla gestione della tua attività che non ti abbiamo chiesto?", "type": "text"}];
 const STORE='clientpro_v3';
-let db=JSON.parse(localStorage.getItem(STORE)||'null')||{theme:'dark',clients:[],tasks:[],history:[]};
+let db=JSON.parse(localStorage.getItem(STORE)||'null')||{theme:'dark',clients:[],tasks:[],history:[],timeEntries:[]};
 let authUser=null;
 let workspaceId=null;
 let cloudSaveTimer=null;
@@ -602,7 +609,7 @@ let deferredInstallPrompt=null;
 let activeView='section';
 let lastSyncAt=null;
 let localDirty=false;
-const APP_VERSION='12.5.2';
+const APP_VERSION='12.6';
 
 function syncTimeText(){
   return lastSyncAt ? 'Ultima sincronizzazione: '+lastSyncAt.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'}) : 'Sincronizzazione non ancora completata';
@@ -674,19 +681,22 @@ async function loadCloudState(force=false){
     setSyncState('error');return false
   }
   const row=Array.isArray(data)?data[0]:data;
+  let pendingTimeMerged=0;
   if(row?.payload&&Object.keys(row.payload).length){
     suppressCloudSave=true;
     const localTheme=db.theme;
     db=row.payload;
     if(!db.theme)db.theme=localTheme||'dark';
+    pendingTimeMerged=mergePendingTimeEntries();
     localStorage.setItem(STORE,JSON.stringify(db));
     suppressCloudSave=false;
-    localDirty=false;
+    localDirty=pendingTimeMerged>0;
   }else{
     await saveCloudState(true);
   }
   lastSyncAt=new Date();
   setSyncState('ok');
+  if(pendingTimeMerged)await saveCloudState(true);
   return true;
 }
 function scheduleCloudSave(){
@@ -707,6 +717,7 @@ async function saveCloudState(force=false){
     setSyncState('error');return false
   }
   localDirty=false;
+  clearSyncedPendingTime(payload);
   lastSyncAt=new Date();
   setSyncState('ok');
   return true;
@@ -820,6 +831,39 @@ let cur=null,tab='overview';
 const save=()=>{localDirty=true;localStorage.setItem(STORE,JSON.stringify(db));scheduleCloudSave()};
 const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
 
+// V12.6 - conteggio automatico del tempo per cliente.
+const TIME_SESSION_KEY='clientpro_active_time_v126';
+const PENDING_TIME_KEY='clientpro_pending_time_v126';
+const IDLE_LIMIT_MS=5*60*1000;
+const TIME_CATEGORIES=['Intervista','Analisi','Problemi','Progetti','Attività'];
+let activeTimeSession=null;
+let idleTimer=null;
+function ensureTimeData(){if(!Array.isArray(db.timeEntries))db.timeEntries=[];db.clients.forEach(c=>{if(c.hourlyRate==null)c.hourlyRate=''})}
+function pendingTimeEntries(){try{const value=JSON.parse(localStorage.getItem(PENDING_TIME_KEY)||'[]');return Array.isArray(value)?value:[]}catch(e){return []}}
+function queuePendingTime(entry){const pending=pendingTimeEntries();if(!pending.some(e=>e.id===entry.id))pending.push(entry);localStorage.setItem(PENDING_TIME_KEY,JSON.stringify(pending))}
+function mergePendingTimeEntries(){ensureTimeData();const pending=pendingTimeEntries(),known=new Set(db.timeEntries.map(e=>e.id));let added=0;pending.forEach(entry=>{if(entry?.id&&!known.has(entry.id)){db.timeEntries.push(entry);known.add(entry.id);added++}});return added}
+function clearSyncedPendingTime(payload){const synced=new Set((payload?.timeEntries||[]).map(e=>e.id));const remaining=pendingTimeEntries().filter(e=>!synced.has(e.id));if(remaining.length)localStorage.setItem(PENDING_TIME_KEY,JSON.stringify(remaining));else localStorage.removeItem(PENDING_TIME_KEY)}
+function trackingContext(){if(!cur?.id)return null;if(activeView==='interview')return {clientId:cur.id,category:'Intervista'};if(activeView!=='client')return null;const map={analysis:'Analisi',problems:'Problemi',projects:'Progetti',tasks:'Attività'};return map[tab]?{clientId:cur.id,category:map[tab]}:null}
+function persistActiveTime(){try{activeTimeSession?localStorage.setItem(TIME_SESSION_KEY,JSON.stringify(activeTimeSession)):localStorage.removeItem(TIME_SESSION_KEY)}catch(e){}}
+function startTimeSession(context,startedAt=Date.now()){if(!context||document.visibilityState==='hidden')return;activeTimeSession={id:crypto.randomUUID(),clientId:context.clientId,category:context.category,startedAt,lastActivityAt:startedAt};persistActiveTime();resetIdleTimer()}
+function closeTimeSession(reason='context',endedAt=Date.now()){
+  if(!activeTimeSession)return;
+  const s=activeTimeSession;activeTimeSession=null;clearTimeout(idleTimer);idleTimer=null;
+  const end=Math.max(s.startedAt,Math.min(endedAt,Date.now())),durationMs=Math.max(0,end-s.startedAt);
+  if(durationMs>=1000){ensureTimeData();const entry={id:s.id,clientId:s.clientId,category:s.category,startedAt:new Date(s.startedAt).toISOString(),endedAt:new Date(end).toISOString(),durationMs,closeReason:reason};db.timeEntries.push(entry);queuePendingTime(entry);save()}
+  persistActiveTime();
+}
+function syncTimeContext(){const context=trackingContext();if(!context){closeTimeSession('uscita-contesto');return}if(activeTimeSession&&(activeTimeSession.clientId!==context.clientId||activeTimeSession.category!==context.category))closeTimeSession('cambio-contesto');if(!activeTimeSession&&document.visibilityState!=='hidden')startTimeSession(context)}
+function resetIdleTimer(){clearTimeout(idleTimer);if(!activeTimeSession)return;const remaining=Math.max(0,activeTimeSession.lastActivityAt+IDLE_LIMIT_MS-Date.now());idleTimer=setTimeout(()=>{if(activeTimeSession)closeTimeSession('inattività',activeTimeSession.lastActivityAt+IDLE_LIMIT_MS)},remaining)}
+function noteUserActivity(){const context=trackingContext();if(!context||document.visibilityState==='hidden')return;if(!activeTimeSession)startTimeSession(context);else{if(activeTimeSession.clientId!==context.clientId||activeTimeSession.category!==context.category){syncTimeContext();return}activeTimeSession.lastActivityAt=Date.now();persistActiveTime();resetIdleTimer()}}
+function recoverTimeSession(){let previous=null;try{previous=JSON.parse(localStorage.getItem(TIME_SESSION_KEY)||'null')}catch(e){}if(!previous?.clientId||!previous?.startedAt)return;activeTimeSession=previous;closeTimeSession('ripristino',Math.min(Date.now(),Number(previous.lastActivityAt||previous.startedAt)+IDLE_LIMIT_MS))}
+function timeEntriesFor(clientId){ensureTimeData();return db.timeEntries.filter(e=>e.clientId===clientId)}
+function timeMsFor(clientId,category=''){let total=timeEntriesFor(clientId).filter(e=>!category||e.category===category).reduce((sum,e)=>sum+Math.max(0,Number(e.durationMs)||0),0);if(activeTimeSession?.clientId===clientId&&(!category||activeTimeSession.category===category))total+=Math.max(0,Date.now()-activeTimeSession.startedAt);return total}
+function formatDuration(ms){const minutes=Math.floor(Math.max(0,ms)/60000),hours=Math.floor(minutes/60),mins=minutes%60;if(!hours)return `${mins} min`;return `${hours} h${mins?' '+String(mins).padStart(2,'0')+' min':''}`}
+function moneyValue(c){const rate=Number(c.hourlyRate)||0;return rate?new Intl.NumberFormat('it-IT',{style:'currency',currency:'EUR'}).format(timeMsFor(c.id)/3600000*rate):'—'}
+function timeSummaryHTML(c){const total=timeMsFor(c.id);return `<div class="timeSummary"><div class=card><h3>Tempo di lavoro</h3><div class=timeTotal>${formatDuration(total)}</div><div class=mut>Conteggio automatico nelle aree di lavoro del cliente.</div><div class=rateRow><label for=hourlyRate>Tariffa €/ora</label><input id=hourlyRate type=number min=0 step=0.5 inputmode=decimal value="${esc(c.hourlyRate??'')}" onchange="setHourlyRate(this.value)"></div><p>Valore stimato: <span class=timeValue>${moneyValue(c)}</span></p></div><div class=card><h3>Suddivisione per categoria</h3><div class=timeBreakdown>${TIME_CATEGORIES.map(category=>`<div class=item><div class="row between"><span>${category}</span><b>${formatDuration(timeMsFor(c.id,category))}</b></div></div>`).join('')}</div></div></div>`}
+function setHourlyRate(value){if(!cur)return;cur.hourlyRate=value===''?'':Math.max(0,Number(value)||0);save();renderClient()}
+
 
 function dashboardGo(page){
   const valid=['home','clients','analysis','problems','projects','tasks'];
@@ -856,6 +900,7 @@ function pushRoute(route, replace=false){
 }
 
 function renderSection(p){
+  closeTimeSession('uscita-cliente');
   activeView='section';
   cur=null;
   activate(p);
@@ -981,13 +1026,13 @@ async function openAccountSettings(){
       <div class="settingBox"><h3>Backup / esportazione</h3><p>Scarica una copia completa dei tuoi dati ClientPro.</p><button onclick="exportData()">Esporta dati</button></div>
       <div class="settingBox"><h3>Ripristino dati</h3><p>Importa un backup ClientPro precedentemente esportato.</p><input id="importFile" type="file" accept=".json,application/json" onchange="importData(this.files[0])"></div>
       <div class="settingBox"><h3>Installazione</h3><p>Installa ClientPro sul dispositivo per aprirla come una normale app.</p><button onclick="installApp()">Installa app</button></div>
-      <div class="settingBox"><h3>Versione</h3><p>ClientPro Commercial Beta 12.5.2<br>Ottimizzazione grafica smartphone e impostazioni aspetto.</p><span class="betaBadge">COMMERCIAL BETA · v12.5.2</span></div>
+      <div class="settingBox"><h3>Versione</h3><p>ClientPro Commercial Beta 12.6<br>Conteggio automatico del tempo per cliente.</p><span class="betaBadge">COMMERCIAL BETA · v12.6</span></div>
     </div>`);
   requestAnimationFrame(()=>{try{modal.scrollTop=0;modalBody.scrollTop=0}catch(e){}});
 }
 
 function exportData(){
-  const blob=new Blob([JSON.stringify({exportedAt:new Date().toISOString(),version:'12.5.2',data:db},null,2)],{type:'application/json'});
+  const blob=new Blob([JSON.stringify({exportedAt:new Date().toISOString(),version:'12.6',data:db},null,2)],{type:'application/json'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='ClientPro_backup_'+new Date().toISOString().slice(0,10)+'.json';a.click();URL.revokeObjectURL(a.href);
 }
 async function importData(file){
@@ -997,7 +1042,7 @@ async function importData(file){
     const incoming=obj.data||obj;
     if(!incoming||!Array.isArray(incoming.clients))throw new Error('File non valido');
     if(!confirm('Sostituire i dati attuali con questo backup?'))return;
-    db=incoming;save();modal.close();applyTheme();go('home',false);alert('Backup importato correttamente.');
+    db=incoming;ensureTimeData();save();modal.close();applyTheme();go('home',false);alert('Backup importato correttamente.');
   }catch(e){alert('Il file selezionato non è un backup ClientPro valido.')}
 }
 window.addEventListener('beforeinstallprompt',e=>{
@@ -1126,17 +1171,17 @@ function analysis(){let a=db.clients.filter(c=>c.interview||c.questionnaire);vie
 function projects(){let a=db.clients.flatMap(c=>(c.projects||[]).map(p=>({c,p})));view.innerHTML=a.length?a.map(x=>`<div class=card><div class="row between"><div><b>${esc(x.p.name)}</b><div class=mut>${esc(x.c.name)}</div></div><span class=pill>${esc(x.p.status)}</span></div></div>`).join(''):'<div class="card empty">Nessun progetto.</div>'}
 function tasks(){view.innerHTML=`<div class="row between"><h3>Attività</h3><button class=primary onclick="newTask()">＋ Nuova attività</button></div>${taskList(db.tasks)}`}
 function taskList(a){return a.length?`<div class=list>${a.map(t=>{let c=db.clients.find(x=>x.id===t.clientId);return `<div class=item><div class="row between"><div><b style="${t.done?'text-decoration:line-through':''}">${esc(t.title)}</b><div class=mut>${c?esc(c.name)+' · ':''}${esc(t.date||'Senza scadenza')}</div></div><button onclick="toggleTask('${t.id}')">${t.done?'↶':'✓'}</button></div></div>`}).join('')}</div>`:'<div class=empty>Nessuna attività.</div>'}
-function openClient(id,t='overview',push=true){activeView='client';cur=db.clients.find(c=>c.id===id);if(!cur){go('clients',push);return}tab=t;activate('');crumb.textContent='Clienti / Scheda di lavoro';title.textContent=cur.name;renderClient();window.scrollTo(0,0);if(push)pushRoute({view:'client',clientId:id,tab:t})}
-function switchClientTab(t,push=true){if(!cur)return;tab=t;renderClient();window.scrollTo(0,0);if(push)pushRoute({view:'client',clientId:cur.id,tab:t})}
+function openClient(id,t='overview',push=true){const next=db.clients.find(c=>c.id===id);if(!next){go('clients',push);return}if(cur?.id!==id)closeTimeSession('cambio-cliente');activeView='client';cur=next;tab=t;activate('');crumb.textContent='Clienti / Scheda di lavoro';title.textContent=cur.name;renderClient();syncTimeContext();window.scrollTo(0,0);if(push)pushRoute({view:'client',clientId:id,tab:t})}
+function switchClientTab(t,push=true){if(!cur)return;tab=t;renderClient();syncTimeContext();window.scrollTo(0,0);if(push)pushRoute({view:'client',clientId:cur.id,tab:t})}
 function renderClient(){let c=cur,ps=c.problems||[],prs=c.projects||[],hs=db.history.filter(h=>h.clientId===c.id).slice(0,8);
 view.innerHTML=`<div class=card><div class="row between"><div><h2>${esc(c.name)}</h2><div class=mut>${esc(c.contact||'Nessun referente')} ${c.phone?'· '+esc(c.phone):''} ${c.email?'· '+esc(c.email):''}</div><p><span class=pill>${esc(c.status)}</span></p></div><button onclick=editClient()>Modifica</button></div></div>
 <div class=tabs>${[['overview','Panoramica'],['analysis','Analisi'],['problems','Problemi'],['projects','Progetti'],['tasks','Attività']].map(x=>`<button class="${tab===x[0]?'on':''}" onclick="switchClientTab('${x[0]}')">${x[1]}</button>`).join('')}</div><div id=ct></div>`;
-if(tab==='overview')ct.innerHTML=`<div class=grid4><div class="card stat"><span>Problemi</span><b>${ps.length}</b></div><div class="card stat"><span>Progetti</span><b>${prs.length}</b></div><div class="card stat"><span>Attività</span><b>${db.tasks.filter(t=>t.clientId===c.id&&!t.done).length}</b></div><div class="card stat"><span>Questionario</span><b style="font-size:16px">${esc(c.questionnaire?.status||'Non inviato')}</b></div></div>
+if(tab==='overview')ct.innerHTML=`${timeSummaryHTML(c)}<div class=grid4><div class="card stat"><span>Problemi</span><b>${ps.length}</b></div><div class="card stat"><span>Progetti</span><b>${prs.length}</b></div><div class="card stat"><span>Attività</span><b>${db.tasks.filter(t=>t.clientId===c.id&&!t.done).length}</b></div><div class="card stat"><span>Questionario</span><b style="font-size:16px">${esc(c.questionnaire?.status||'Non inviato')}</b></div></div>
 <div class=grid2><div class=card><h3>Prossima azione</h3><b>${esc(c.next||'Nessuna')}</b></div><div class=card><h3>Note</h3><div class=mut>${esc(c.notes||'Nessuna nota')}</div></div></div>
 <div class=card><h3>Storico recente</h3>${hs.length?hs.map(h=>`<div class=item><b>${esc(h.text)}</b><div class=mut>${fmt(h.date)}</div></div>`).join(''):'<div class=mut>Nessun evento.</div>'}</div>`;
 if(tab==='analysis')ct.innerHTML=`<div class=grid2><div class=card><div class="row between"><h2>Intervista digitale</h2><span class="pill blue">${c.interview?interviewProgress(c)+'%':'Non iniziata'}</span></div><p class=mut>Compila direttamente da PC, tablet o telefono con salvataggio automatico.</p><button class=primary onclick="startInterviewForClient('${c.id}')">${c.interview?'Continua intervista':'Inizia intervista'}</button></div>
 <div class=card><div class="row between"><h2>Questionario cliente</h2><span class="pill ${c.questionnaire?.status==='Compilato'?'green':c.questionnaire?.status==='In compilazione'?'orange':c.questionnaire?.status==='Inviato'?'blue':''}">${esc(c.questionnaire?.status||'Non inviato')}</span></div><p class=mut>${questionnaireStatusText(c)}</p><div class=row>${c.questionnaire?.status==='Compilato'?'<button class=primary onclick=viewQuestionnaireAnswers()>Vedi risposte</button>':'<button class=primary onclick=prepareQuestionnaire()>Invia questionario</button>'}<button onclick=previewQuestionnaire()>Anteprima</button></div></div></div>`;
-// V12.5.2: mantiene la sincronizzazione stabile e migliora la testata mobile.
+// Mantiene la sincronizzazione stabile senza ridisegnare l'intervista.
 if(tab==='analysis')setTimeout(()=>syncQuestionnaire(c.id,false),120);
 if(tab==='problems')ct.innerHTML=`<div class="row between"><h3>Problemi da risolvere</h3><button class=primary onclick=newProblem()>＋ Nuovo problema</button></div>${ps.length?ps.map((p,i)=>`<div class="card problem ${p.status==='Risolto'?'resolved':''} click" onclick="openProblem(${i})"><div class="row between"><div><b>${esc(p.title)}</b><div class=mut>${esc(p.description||'')}</div></div><span class=pill>${esc(p.status)}</span></div></div>`).join(''):'<div class="card empty">Nessun problema registrato.</div>'}`;
 if(tab==='projects')ct.innerHTML=`<div class="row between"><h3>Progetti</h3><button class=primary onclick=newProject()>＋ Nuovo progetto</button></div>${prs.length?prs.map(p=>`<div class=card><div class="row between"><div><b>${esc(p.name)}</b><div class=mut>${esc(p.description||'')}</div></div><span class=pill>${esc(p.status)}</span></div></div>`).join(''):'<div class="card empty">Nessun progetto.</div>'}`;
@@ -1166,6 +1211,7 @@ function startInterviewForClient(clientId,push=true){
     activeView='interview';
     cur=c;
     tab='interview';
+    syncTimeContext();
     ensureInterview(cur);
     renderInterview();
     window.scrollTo(0,0);
@@ -1358,6 +1404,8 @@ const publicId=new URLSearchParams(location.search).get('questionario');
     await ensureWorkspace();
     await loadCloudState();
   }
+  ensureTimeData();
+  recoverTimeSession();
 
   appRoutingEnabled=true;
   try{history.replaceState({view:'section',page:'home'},'')}catch(e){}
@@ -1373,7 +1421,9 @@ if(backendReady()){
     if(event==='SIGNED_OUT'){authUser=null;setSyncState('error')}
   });
 }
-window.addEventListener('focus',()=>{if(backendReady()&&authUser&&!localDirty)syncNow(false)});
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&backendReady()&&authUser&&!localDirty)syncNow(false)});
+['pointerdown','keydown','input','touchstart','scroll'].forEach(type=>document.addEventListener(type,noteUserActivity,{passive:true,capture:true}));
+window.addEventListener('focus',()=>{noteUserActivity();if(backendReady()&&authUser&&!localDirty)syncNow(false)});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'){closeTimeSession('pagina-nascosta');if(backendReady()&&authUser)saveCloudState(true)}else{syncTimeContext();if(backendReady()&&authUser&&!localDirty)syncNow(false)}});
+window.addEventListener('pagehide',()=>{closeTimeSession('chiusura-pagina');if(backendReady()&&authUser)saveCloudState(true)});
 if('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>r.update()).catch(console.warn);
 </script></body></html>
