@@ -519,7 +519,7 @@ dialog::backdrop{background:rgba(0,0,0,.72);backdrop-filter:blur(4px)}
 <div class="top"><div><small id="crumb" class="mut">ClientPro</small><h1 id="title">Dashboard</h1></div><input class="topSearch" placeholder="Cerca clienti, progetti, attività..."><div class="actions">
 <button id="installBtn" class="installBtn" title="Installa ClientPro" onclick="installApp()">↓ <span class="accountText">Installa</span></button>
 <button title="Tema" onclick="toggleTheme()">◐</button>
-<span class="betaBadge" title="Versione installata">v12.5</span>
+<span class="betaBadge" title="Versione installata">v12.5.1</span>
 <button class="accountBtn" title="Account e impostazioni" onclick="openAccountSettings()"><span class="avatar" id="accountAvatar">CP</span><span class="accountText" id="accountLabel">Account</span></button>
 <button class="primary" onclick="newClient()">＋ Nuovo cliente</button>
 </div></div><div id="offlineBanner" class="offlineBanner"></div><div id="view"></div></main>
@@ -542,7 +542,7 @@ let deferredInstallPrompt=null;
 let activeView='section';
 let lastSyncAt=null;
 let localDirty=false;
-const APP_VERSION='12.5';
+const APP_VERSION='12.5.1';
 
 function syncTimeText(){
   return lastSyncAt ? 'Ultima sincronizzazione: '+lastSyncAt.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'}) : 'Sincronizzazione non ancora completata';
@@ -732,7 +732,7 @@ async function syncQuestionnaire(clientId,rerender=true){
   c.questionnaire.completedAt=row.completed_at||c.questionnaire.completedAt;
   if(row.answers)c.questionnaire.answers=row.answers;
   if(row.notes)c.questionnaire.notes=row.notes;
-  save();
+  localStorage.setItem(STORE,JSON.stringify(db));
   if(before!==c.questionnaire.status&&c.questionnaire.status==='Compilato')logEvent(c.id,'Questionario compilato dal cliente');
   if(rerender&&activeView==='client'&&cur?.id===c.id&&tab==='analysis')renderClient();
   return true;
@@ -916,13 +916,13 @@ async function openAccountSettings(){
       <div class="settingBox"><h3>Backup / esportazione</h3><p>Scarica una copia completa dei tuoi dati ClientPro.</p><button onclick="exportData()">Esporta dati</button></div>
       <div class="settingBox"><h3>Ripristino dati</h3><p>Importa un backup ClientPro precedentemente esportato.</p><input id="importFile" type="file" accept=".json,application/json" onchange="importData(this.files[0])"></div>
       <div class="settingBox"><h3>Installazione</h3><p>Installa ClientPro sul dispositivo per aprirla come una normale app.</p><button onclick="installApp()">Installa app</button></div>
-      <div class="settingBox"><h3>Versione</h3><p>ClientPro Commercial Beta 12.5<br>Aggiornamento di stabilizzazione PC + smartphone.</p><span class="betaBadge">COMMERCIAL BETA · v12.5</span></div>
+      <div class="settingBox"><h3>Versione</h3><p>ClientPro Commercial Beta 12.5.1<br>Correzione apertura intervista su PC e ciclo sincronizzazione questionario.</p><span class="betaBadge">COMMERCIAL BETA · v12.5.1.1</span></div>
     </div>`);
   requestAnimationFrame(()=>{try{modal.scrollTop=0;modalBody.scrollTop=0}catch(e){}});
 }
 
 function exportData(){
-  const blob=new Blob([JSON.stringify({exportedAt:new Date().toISOString(),version:'12.5',data:db},null,2)],{type:'application/json'});
+  const blob=new Blob([JSON.stringify({exportedAt:new Date().toISOString(),version:'12.5.1',data:db},null,2)],{type:'application/json'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='ClientPro_backup_'+new Date().toISOString().slice(0,10)+'.json';a.click();URL.revokeObjectURL(a.href);
 }
 async function importData(file){
@@ -1061,7 +1061,8 @@ if(tab==='overview')ct.innerHTML=`<div class=grid4><div class="card stat"><span>
 <div class=card><h3>Storico recente</h3>${hs.length?hs.map(h=>`<div class=item><b>${esc(h.text)}</b><div class=mut>${fmt(h.date)}</div></div>`).join(''):'<div class=mut>Nessun evento.</div>'}</div>`;
 if(tab==='analysis')ct.innerHTML=`<div class=grid2><div class=card><div class="row between"><h2>Intervista digitale</h2><span class="pill blue">${c.interview?interviewProgress(c)+'%':'Non iniziata'}</span></div><p class=mut>Compila direttamente da PC, tablet o telefono con salvataggio automatico.</p><button class=primary onclick="startInterviewForClient('${c.id}')">${c.interview?'Continua intervista':'Inizia intervista'}</button></div>
 <div class=card><div class="row between"><h2>Questionario cliente</h2><span class="pill ${c.questionnaire?.status==='Compilato'?'green':c.questionnaire?.status==='In compilazione'?'orange':c.questionnaire?.status==='Inviato'?'blue':''}">${esc(c.questionnaire?.status||'Non inviato')}</span></div><p class=mut>${questionnaireStatusText(c)}</p><div class=row>${c.questionnaire?.status==='Compilato'?'<button class=primary onclick=viewQuestionnaireAnswers()>Vedi risposte</button>':'<button class=primary onclick=prepareQuestionnaire()>Invia questionario</button>'}<button onclick=previewQuestionnaire()>Anteprima</button></div></div></div>`;
-setTimeout(()=>syncQuestionnaire(c.id,true),30);
+// V12.5.1: sincronizza il questionario senza ridisegnare continuamente la scheda.
+if(tab==='analysis')setTimeout(()=>syncQuestionnaire(c.id,false),120);
 if(tab==='problems')ct.innerHTML=`<div class="row between"><h3>Problemi da risolvere</h3><button class=primary onclick=newProblem()>＋ Nuovo problema</button></div>${ps.length?ps.map((p,i)=>`<div class="card problem ${p.status==='Risolto'?'resolved':''} click" onclick="openProblem(${i})"><div class="row between"><div><b>${esc(p.title)}</b><div class=mut>${esc(p.description||'')}</div></div><span class=pill>${esc(p.status)}</span></div></div>`).join(''):'<div class="card empty">Nessun problema registrato.</div>'}`;
 if(tab==='projects')ct.innerHTML=`<div class="row between"><h3>Progetti</h3><button class=primary onclick=newProject()>＋ Nuovo progetto</button></div>${prs.length?prs.map(p=>`<div class=card><div class="row between"><div><b>${esc(p.name)}</b><div class=mut>${esc(p.description||'')}</div></div><span class=pill>${esc(p.status)}</span></div></div>`).join(''):'<div class="card empty">Nessun progetto.</div>'}`;
 if(tab==='tasks')ct.innerHTML=`<div class="row between"><h3>Attività cliente</h3><button class=primary onclick="newTask('${c.id}')">＋ Attività</button></div>${taskList(db.tasks.filter(t=>t.clientId===c.id))}`}
