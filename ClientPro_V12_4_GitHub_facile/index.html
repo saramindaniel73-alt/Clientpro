@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ClientPro</title><meta name="theme-color" content="#06101d"><meta name="description" content="ClientPro - gestione clienti, analisi, problemi, progetti e attività"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-192.png">
+<title>ClientPro</title><meta name="theme-color" content="#06101d"><meta name="description" content="ClientPro V13 - Developer Workspace: clienti, problemi, soluzioni e progetti"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-192.png">
 
 <style>
 :root{
@@ -624,17 +624,38 @@ dialog::backdrop{background:rgba(0,0,0,.72);backdrop-filter:blur(4px)}
 .providerStatus{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.providerStatus .dot{width:9px;height:9px;border-radius:50%;background:var(--red)}.providerStatus.ok .dot{background:var(--green)}
 @media(max-width:760px){.searchGrid,.choiceGrid{grid-template-columns:1fr}.pipelineCounts{grid-template-columns:1fr 1fr}.resultActions{display:grid;grid-template-columns:1fr 1fr}.resultActions button{width:100%}}
 @media(max-width:460px){.pipelineCounts,.resultActions{grid-template-columns:1fr}}
+.problemWorkspaceHead{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.problemWorkspaceHead h2{margin:0 0 5px;font-size:23px}
+.v13Path{display:flex;gap:7px;overflow:auto;padding:4px 0 12px;margin:10px 0}
+.v13Path button{white-space:nowrap;padding:8px 11px;font-size:12px;background:var(--panel2)}
+.v13Path button.on{background:linear-gradient(135deg,var(--blue),var(--blue2));border-color:transparent;color:white}
+.v13Path button.done{border-color:rgba(40,211,157,.45);color:var(--green)}
+.v13Path button.skip{border-color:rgba(141,124,255,.38);color:#ad9fff}
+.v13Grid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(280px,.75fr);gap:14px}
+.v13Metric{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.v13Metric .card{margin:0;padding:13px}.v13Metric b{font-size:24px;display:block;margin-top:5px}
+.v13SaveState{font-size:11px;color:var(--muted);font-weight:800}
+.v13List{display:grid;gap:9px}.v13List .item{padding:13px}
+.v13Actions{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+.v13Actions button{padding:8px 10px}
+.v13Two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.v13Three{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.v13Code{white-space:pre-wrap;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--panel2);border:1px solid var(--line);border-radius:11px;padding:13px;line-height:1.5}
+.v13Note{padding:10px 12px;border:1px solid rgba(47,140,255,.25);background:rgba(47,140,255,.07);border-radius:11px;color:var(--muted)}
+.v13StatusRow{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+.v13Link{color:#78baff;text-decoration:none}.v13Link:hover{text-decoration:underline}
+@media(max-width:900px){.v13Grid{grid-template-columns:1fr}.v13Metric{grid-template-columns:1fr 1fr}.v13Two,.v13Three{grid-template-columns:1fr}}
 </style>
 
 </head><body>
 <div class="app">
 <aside class="side"><div class="brand click" onclick="go('home')"><div class="mark">CP</div>ClientPro</div><div class="miniLabel">AREA DI LAVORO</div><div class="nav">
-<button data-page="home" onclick="go('home')">⌂ &nbsp; Home</button><button data-page="clients" onclick="dashboardGo('clients')">♙ &nbsp; Clienti</button><button data-page="commercial" onclick="go('commercial')">⌕ &nbsp; Trova clienti</button><button data-page="analysis" onclick="go('analysis')">◎ &nbsp; Analisi</button><button data-page="projects" onclick="dashboardGo('projects')">▣ &nbsp; Progetti</button><button data-page="tasks" onclick="dashboardGo('tasks')">✓ &nbsp; Attività</button>
+<button data-page="home" onclick="go('home')">⌂ &nbsp; Home</button><button data-page="clients" onclick="dashboardGo('clients')">♙ &nbsp; Clienti</button><button data-page="analysis" onclick="go('analysis')">◎ &nbsp; Analisi</button><button data-page="problems" onclick="go('problems')">⚠ &nbsp; Problemi</button><button data-page="projects" onclick="dashboardGo('projects')">▣ &nbsp; Progetti</button><button data-page="tasks" onclick="dashboardGo('tasks')">✓ &nbsp; Attività</button>
 </div></aside>
 <main class="main"><div class="mobileBrand click" onclick="go('home')"><div class="mark">CP</div><b>ClientPro</b></div>
 <div class="top"><div><small id="crumb" class="mut">ClientPro</small><h1 id="title">Dashboard</h1></div><input class="topSearch" placeholder="Cerca clienti, progetti, attività..."><div class="actions">
 <button id="installBtn" class="installBtn" title="Installa ClientPro" onclick="installApp()">↓ <span class="accountText">Installa</span></button>
-<span class="betaBadge" title="Versione installata">v12.8</span>
+<span class="betaBadge" title="Versione installata">v13.0</span>
 <button class="accountBtn" title="Account e impostazioni" onclick="openAccountSettings()"><span class="avatar" id="accountAvatar">CP</span><span class="accountText" id="accountLabel">Account</span></button>
 <button class="primary" onclick="newClient()">＋ Nuovo cliente</button>
 </div></div><div id="offlineBanner" class="offlineBanner"></div><div id="view"></div></main>
@@ -657,7 +678,7 @@ let deferredInstallPrompt=null;
 let activeView='section';
 let lastSyncAt=null;
 let localDirty=false;
-const APP_VERSION='12.8';
+const APP_VERSION='13.0';
 
 function syncTimeText(){
   return lastSyncAt ? 'Ultima sincronizzazione: '+lastSyncAt.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'}) : 'Sincronizzazione non ancora completata';
@@ -786,6 +807,7 @@ async function syncNow(manual=false){
     applyTheme();
     if(activeView==='client'&&cur?.id){const id=cur.id, t=tab;cur=db.clients.find(c=>c.id===id)||null;if(cur)openClient(id,t,false);else go('clients',false)}
     else if(activeView==='interview'&&cur?.id){const id=cur.id;cur=db.clients.find(c=>c.id===id)||null;if(cur)renderInterview();else go('clients',false)}
+    else if(activeView==='problemWorkspace'&&v13Problem?.id){await loadProblemWorkspace(v13Problem.id,v13Section,false)}
     else if(activeView==='section')renderSection(document.querySelector('[data-page].active')?.dataset.page||'home');
   }
   return loaded;
@@ -880,6 +902,10 @@ async function submitPublicOnline(token,answers,notes){
 }
 
 let cur=null,tab='overview';
+let v13Problem=null;
+let v13LegacyIndex=null;
+let v13Section='overview';
+let v13SaveTimer=null;
 const save=()=>{localDirty=true;localStorage.setItem(STORE,JSON.stringify(db));scheduleCloudSave()};
 const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
 
@@ -1048,8 +1074,9 @@ function iconSvg(name){
 }
 function problems(){
  let a=db.clients.flatMap(c=>(c.problems||[]).map((p,i)=>({c,p,i})));
- view.innerHTML=a.length?`<div class=list>${a.map(x=>`<div class="card problemAll ${x.p.status==='Risolto'?'resolved':''}" onclick="openClient('${x.c.id}','problems')"><div class="row between"><div><b>${esc(x.p.title)}</b><div class=mut>${esc(x.c.name)} · ${esc(x.p.description||'')}</div></div><span class=pill>${esc(x.p.status)}</span></div></div>`).join('')}</div>`:'<div class="card empty">Nessun problema registrato.</div>'
+ view.innerHTML=a.length?`<div class=list>${a.map(x=>`<div class="card problemAll ${x.p.status==='Risolto'?'resolved':''}"><div class="row between"><div><b>${esc(x.p.title)}</b><div class=mut>${esc(x.c.name)} · ${esc(x.p.description||'')}</div></div><span class=pill>${esc(x.p.status)}</span></div><div class=v13Actions style="margin-top:10px"><button class=primary onclick="openProblemFromGlobal('${x.c.id}',${x.i})">Lavora sul problema</button><button onclick="openClient('${x.c.id}','problems')">Apri cliente</button></div></div>`).join('')}</div>`:'<div class="card empty">Nessun problema registrato.</div>'
 }
+function openProblemFromGlobal(clientId,i){openClient(clientId,'problems',false);setTimeout(()=>startProblemWorkspace(i),0)}
 
 
 let appRoutingEnabled=false;
@@ -1089,6 +1116,12 @@ function restoreRoute(route){
   if(route.view==='questionnairePreview'){
     const c=db.clients.find(x=>x.id===route.clientId);
     if(c){cur=c;tab='analysis';activate('');renderSelfQuestionnaire(false);window.scrollTo(0,0)}
+    else renderSection('clients');
+    return;
+  }
+  if(route.view==='problemWorkspace'){
+    const c=db.clients.find(x=>x.id===route.clientId);
+    if(c){cur=c;v13LegacyIndex=route.legacyIndex??null;loadProblemWorkspace(route.problemId,route.section||'overview',false)}
     else renderSection('clients');
     return;
   }
@@ -1192,7 +1225,7 @@ async function openAccountSettings(){
       <div class="settingBox"><h3>Ripristino dati</h3><p>Importa un backup ClientPro precedentemente esportato.</p><input id="importFile" type="file" accept=".json,application/json" onchange="importData(this.files[0])"></div>
       <div class="settingBox"><h3>Installazione</h3><p>Installa ClientPro sul dispositivo per aprirla come una normale app.</p><button onclick="installApp()">Installa app</button></div>
       <div class="settingBox"><h3>Acquisizione clienti</h3><p>Il motore di ricerca usa Geoapify. La chiave API resta salvata solo su questo dispositivo.</p><label>Geoapify API key</label><input id="geoKeySetting" type="password" value="${esc(getGeoKey())}" placeholder="Incolla la chiave Geoapify"><label>URL informativa privacy</label><input id="privacyUrlSetting" value="${esc(db.commercial?.privacyNoticeUrl||'')}" placeholder="https://..."><label>Firma commerciale (facoltativa)</label><input id="signatureSetting" value="${esc(db.commercial?.signature||'')}" placeholder="Nome / attività"><button onclick="saveCommercialSettings()">Salva impostazioni commerciali</button></div>
-      <div class="settingBox"><h3>Versione</h3><p>ClientPro Commercial Beta 12.7<br>Archivio clienti, storico lavori, consuntivi e indirizzi.</p><span class="betaBadge">COMMERCIAL BETA · v12.8</span></div>
+      <div class="settingBox"><h3>Versione</h3><p>ClientPro Developer Workspace V13.0<br>Archivio clienti, storico lavori, consuntivi e indirizzi.</p><span class="betaBadge">COMMERCIAL BETA · v12.8</span></div>
     </div>`);
   requestAnimationFrame(()=>{try{modal.scrollTop=0;modalBody.scrollTop=0}catch(e){}});
 }
@@ -1482,7 +1515,7 @@ function renderClient(){
   if(tab==='analysis')ct.innerHTML=`<div class=grid2><div class=card><div class="row between"><h2>Intervista digitale</h2><span class="pill blue">${c.interview?interviewProgress(c)+'%':'Non iniziata'}</span></div><p class=mut>Compila direttamente da PC, tablet o telefono con salvataggio automatico.</p><button class=primary ${c.archived?'disabled':''} onclick="startInterviewForClient('${c.id}')">${c.interview?'Continua intervista':'Inizia intervista'}</button></div>
   <div class=card><div class="row between"><h2>Questionario cliente</h2><span class="pill ${c.questionnaire?.status==='Compilato'?'green':c.questionnaire?.status==='In compilazione'?'orange':c.questionnaire?.status==='Inviato'?'blue':''}">${esc(c.questionnaire?.status||'Non inviato')}</span></div><p class=mut>${questionnaireStatusText(c)}</p><div class=row>${c.questionnaire?.status==='Compilato'?'<button class=primary onclick=viewQuestionnaireAnswers()>Vedi risposte</button>':`<button class=primary ${c.archived?'disabled':''} onclick=prepareQuestionnaire()>Invia questionario</button>`}<button onclick=previewQuestionnaire()>Anteprima</button></div></div></div>`;
   if(tab==='analysis')setTimeout(()=>syncQuestionnaire(c.id,false),120);
-  if(tab==='problems')ct.innerHTML=`<div class="row between"><h3>Problemi da risolvere</h3><button class=primary ${c.archived?'disabled':''} onclick=newProblem()>＋ Nuovo problema</button></div>${ps.length?ps.map((p,i)=>`<div class="card problem ${p.status==='Risolto'?'resolved':''} click" onclick="openProblem(${i})"><div class="row between"><div><b>${esc(p.title)}</b><div class=mut>${esc(p.description||'')}</div></div><span class=pill>${esc(p.status)}</span></div></div>`).join(''):'<div class="card empty">Nessun problema registrato.</div>'}`;
+  if(tab==='problems')ct.innerHTML=`<div class="row between"><h3>Problemi da risolvere</h3><button class=primary ${c.archived?'disabled':''} onclick=newProblem()>＋ Nuovo problema</button></div>${ps.length?ps.map((p,i)=>`<div class="card problem ${p.status==='Risolto'?'resolved':''}"><div class="row between"><div><b>${esc(p.title)}</b><div class=mut>${esc(p.description||'')}</div></div><span class=pill>${esc(p.status)}</span></div><div class=v13Actions style="margin-top:11px"><button class=primary ${c.archived?'disabled':''} onclick="startProblemWorkspace(${i})">Lavora sul problema</button><button onclick="openProblem(${i})">Modifica stato</button></div></div>`).join(''):'<div class="card empty">Nessun problema registrato.</div>'}`;
   if(tab==='projects')ct.innerHTML=`<div class="row between"><h3>Progetti / lavori</h3><button class=primary ${c.archived?'disabled':''} onclick=newProject()>＋ Nuovo progetto</button></div>${prs.length?prs.map(p=>{ensureProjectData(p,c);const lc=latestClosure(p);return `<div class="card projectCard" onclick="openProject('${p.id}')"><div class="row between"><div><b>${esc(p.name)}</b><div class=mut>${esc(p.description||'')}</div><div class=projectMeta><span class=pill>${projectLabel(p)}</span>${lc?`<span class="pill green">${formatDuration(lc.durationMs||0)} · ${moneyFmt(lc.estimatedValue||0)}</span>`:''}</div></div><span class=pill>${esc(p.status)}</span></div></div>`}).join(''):'<div class="card empty">Nessun progetto.</div>'}`;
   if(tab==='tasks')ct.innerHTML=`<div class="row between"><h3>Attività cliente</h3><button class=primary ${c.archived?'disabled':''} onclick="newTask('${c.id}')">＋ Attività</button></div>${taskList(db.tasks.filter(t=>t.clientId===c.id),c.archived)}`;
   if(tab==='history')ct.innerHTML=clientHistoryHTML(c);
@@ -1726,8 +1759,238 @@ async function deleteClient(){
 
 function newProblem(){show(`<h2>Nuovo problema</h2><label>Titolo *</label><input id=pt><label>Descrizione / situazione attuale</label><textarea id=pd></textarea><label>Priorità</label><select id=pp><option>Alta</option><option selected>Media</option><option>Bassa</option></select><button class=primary onclick=saveProblem()>Aggiungi problema</button>`)}
 function saveProblem(){if(!pt.value.trim())return;cur.problems.push({title:pt.value,description:pd.value,priority:pp.value,solution:'',status:'Da analizzare'});logEvent(cur.id,'Creato problema “'+pt.value+'”');save();modal.close();renderClient()}
-function openProblem(i){let p=cur.problems[i];if(cur.archived){show(`<h2>${esc(p.title)}</h2><div class=mut>Priorità: ${esc(p.priority)}${p.source?' · '+esc(p.source):''}</div><p>${esc(p.description)}</p><div class=section>SOLUZIONE</div><div class=item>${esc(p.solution||'Nessuna soluzione registrata')}</div><p><span class=pill>${esc(p.status)}</span></p><button onclick="modal.close()">Chiudi</button>`);return}show(`<h2>${esc(p.title)}</h2><div class=mut>Priorità: ${esc(p.priority)}${p.source?' · '+esc(p.source):''}</div><p>${esc(p.description)}</p><label>Soluzione</label><textarea id=sol>${esc(p.solution||'')}</textarea><label>Stato</label><select id=pst>${['Da analizzare','Soluzione individuata','In lavorazione','Risolto'].map(x=>`<option ${p.status===x?'selected':''}>${x}</option>`).join('')}</select><button class=primary onclick="updateProblem(${i})">Salva</button>`)}
+function openProblem(i){let p=cur.problems[i];if(cur.archived){show(`<h2>${esc(p.title)}</h2><div class=mut>Priorità: ${esc(p.priority)}${p.source?' · '+esc(p.source):''}</div><p>${esc(p.description)}</p><div class=section>SOLUZIONE</div><div class=item>${esc(p.solution||'Nessuna soluzione registrata')}</div><p><span class=pill>${esc(p.status)}</span></p><button onclick="modal.close()">Chiudi</button>`);return}show(`<h2>${esc(p.title)}</h2><div class=mut>Priorità: ${esc(p.priority)}${p.source?' · '+esc(p.source):''}</div><p>${esc(p.description)}</p><div class=v13Actions><button class=primary onclick="modal.close();startProblemWorkspace(${i})">Lavora sul problema</button></div><hr style="border:0;border-top:1px solid var(--line);margin:18px 0"><label>Soluzione rapida V12</label><textarea id=sol>${esc(p.solution||'')}</textarea><label>Stato</label><select id=pst>${['Da analizzare','Soluzione individuata','In lavorazione','Risolto'].map(x=>`<option ${p.status===x?'selected':''}>${x}</option>`).join('')}</select><button onclick="updateProblem(${i})">Salva stato</button>`)}
 function updateProblem(i){let old=cur.problems[i].status;cur.problems[i].solution=sol.value;cur.problems[i].status=pst.value;if(old!==pst.value)logEvent(cur.id,'Problema “'+cur.problems[i].title+'” → '+pst.value);save();modal.close();renderClient()}
+
+function mapPriorityV13(v){return ({Alta:'high',Media:'medium',Bassa:'low',Critica:'critical'})[v]||'medium'}
+function mapStatusV13(v){return ({'Da analizzare':'to_analyze','Soluzione individuata':'solution_identified','In lavorazione':'in_progress','Risolto':'resolved'})[v]||'to_analyze'}
+function labelPriorityV13(v){return ({low:'Bassa',medium:'Media',high:'Alta',critical:'Critica'})[v]||v}
+function labelStatusV13(v){return ({to_analyze:'Da analizzare',solution_identified:'Soluzione individuata',in_progress:'In lavorazione',resolved:'Risolto'})[v]||v}
+function v13LegacyRef(clientId,i){return clientId+':legacy-problem:'+i}
+function v13N(v){const n=Number(v);return Number.isFinite(n)?n:null}
+function v13ArrText(v){if(Array.isArray(v))return v.join('\n');return String(v||'')}
+function v13TextArr(v){return String(v||'').split('\n').map(x=>x.trim()).filter(Boolean)}
+
+async function ensureV13Ready(){
+  if(!backendReady()){alert('Per usare il Workspace V13 serve la connessione cloud Supabase.');return false}
+  if(!authUser && !(await recoverCloudSession())){alert('Sessione scaduta. Ricarica ClientPro e accedi di nuovo.');return false}
+  if(!workspaceId)await ensureWorkspace();
+  return !!workspaceId;
+}
+
+async function startProblemWorkspace(i){
+  if(!cur||!cur.problems?.[i])return;
+  if(!(await ensureV13Ready()))return;
+  const p=cur.problems[i],legacy=v13LegacyRef(cur.id,i);
+  let {data,error}=await SB.from('cp_problems').select('*').eq('workspace_id',workspaceId).eq('client_ref',cur.id).eq('legacy_problem_ref',legacy).maybeSingle();
+  if(error){console.error(error);alert('Errore nel caricamento del Workspace V13.');return}
+  if(!data){
+    const payload={workspace_id:workspaceId,client_ref:cur.id,legacy_problem_ref:legacy,title:p.title||'Problema',summary:p.description||'',problem_statement:p.description||'',current_handling:'',priority:mapPriorityV13(p.priority),status:mapStatusV13(p.status),current_phase:'definition'};
+    const ins=await SB.from('cp_problems').insert(payload).select().single();
+    if(ins.error){console.error(ins.error);alert('Non riesco a creare il Workspace V13 per questo problema.');return}
+    data=ins.data;
+    if(p.solution){
+      await SB.from('cp_solutions').insert({workspace_id:workspaceId,client_ref:cur.id,problem_id:data.id,name:'Soluzione precedente',description:p.solution,status:p.status==='Soluzione individuata'||p.status==='In lavorazione'||p.status==='Risolto'?'selected':'candidate'});
+    }
+  }
+  v13LegacyIndex=i;
+  await loadProblemWorkspace(data.id,'overview',true);
+}
+
+async function loadProblemWorkspace(problemId,section='overview',push=true){
+  if(!(await ensureV13Ready()))return;
+  const {data,error}=await SB.from('cp_problems').select('*').eq('id',problemId).single();
+  if(error||!data){console.error(error);alert('Problema V13 non disponibile.');return}
+  const client=db.clients.find(x=>x.id===data.client_ref);if(client)cur=client;
+  if(v13LegacyIndex==null&&client){v13LegacyIndex=(client.problems||[]).findIndex((p,i)=>v13LegacyRef(client.id,i)===data.legacy_problem_ref)}
+  v13Problem=data;v13Section=section;activeView='problemWorkspace';activate('');
+  crumb.textContent='Clienti / Problemi / Workspace';title.textContent=data.title;
+  await renderProblemWorkspace();syncTimeContext();window.scrollTo(0,0);
+  if(push)pushRoute({view:'problemWorkspace',clientId:data.client_ref,legacyIndex:v13LegacyIndex,problemId:data.id,section});
+}
+
+async function switchProblemWorkspaceSection(section,push=true){
+  v13Section=section;await renderProblemWorkspace();window.scrollTo(0,0);
+  if(push&&v13Problem)pushRoute({view:'problemWorkspace',clientId:v13Problem.client_ref,legacyIndex:v13LegacyIndex,problemId:v13Problem.id,section});
+}
+async function v13Fetch(table,order='created_at',ascending=true){
+  const {data,error}=await SB.from(table).select('*').eq('problem_id',v13Problem.id).order(order,{ascending});
+  if(error){console.error(error);return []}return data||[];
+}
+async function v13FetchSections(){
+  const {data,error}=await SB.from('cp_problem_sections').select('*').eq('problem_id',v13Problem.id);
+  if(error){console.error(error);return []}return data||[];
+}
+function v13PhaseLabel(x){return ({definition:'Definizione',data:'Dati',causes:'Cause',questions:'Domande',solutions:'Soluzioni',experiments:'Esperimenti',requirements:'Requisiti',decisions:'Decisioni',design:'Progettazione',flow:'Flowchart',tests:'Test',result:'Risultato',files:'File',history:'Storico'})[x]||x}
+function v13PathHTML(sections){
+  const phases=['definition','data','causes','questions','solutions','experiments','requirements','decisions','design','flow','tests','result'];
+  return '<div class=v13Path><button class="'+(v13Section==='overview'?'on':'')+'" onclick="switchProblemWorkspaceSection(\'overview\')">Panoramica</button>'+phases.map(p=>{const s=sections.find(x=>x.phase===p),cls=(v13Section===p?'on ':'')+(s?.status==='completed'?'done ':s?.status==='skipped'?'skip ':'');return '<button class="'+cls.trim()+'" onclick="switchProblemWorkspaceSection(\''+p+'\')">'+esc(v13PhaseLabel(p))+(s?.status==='completed'?' ✓':s?.status==='skipped'?' —':'')+'</button>'}).join('')+'<button class="'+(v13Section==='files'?'on':'')+'" onclick="switchProblemWorkspaceSection(\'files\')">File</button><button class="'+(v13Section==='history'?'on':'')+'" onclick="switchProblemWorkspaceSection(\'history\')">Storico</button></div>';
+}
+async function setV13SectionStatus(phase,status){
+  const {error}=await SB.from('cp_problem_sections').update({status}).eq('problem_id',v13Problem.id).eq('phase',phase);
+  if(error){console.error(error);alert('Errore aggiornando la fase.');return}
+  const p=await SB.from('cp_problems').select('*').eq('id',v13Problem.id).single();if(p.data)v13Problem=p.data;
+  await renderProblemWorkspace();
+}
+function sectionStatusButton(sections,phase){
+  const s=sections.find(x=>x.phase===phase);if(!s)return '';
+  if(s.status==='completed')return '<button onclick="setV13SectionStatus(\''+phase+'\',\'in_progress\')">Riapri fase</button>';
+  if(s.status==='skipped')return '<button onclick="setV13SectionStatus(\''+phase+'\',\'in_progress\')">Rendi necessaria</button>';
+  return '<button class=primary onclick="setV13SectionStatus(\''+phase+'\',\'completed\')">Segna fase completata</button><button onclick="setV13SectionStatus(\''+phase+'\',\'skipped\')">Non necessaria</button>';
+}
+async function updateV13Problem(patch){
+  const {data,error}=await SB.from('cp_problems').update(patch).eq('id',v13Problem.id).select().single();
+  if(error){console.error(error);return false}v13Problem=data;return true;
+}
+function syncLegacyProblemFromV13(patch={}){
+  if(!cur||v13LegacyIndex==null||v13LegacyIndex<0||!cur.problems?.[v13LegacyIndex])return;
+  const p=cur.problems[v13LegacyIndex];
+  if(patch.status)p.status=labelStatusV13(patch.status);
+  if(patch.solution!=null)p.solution=patch.solution;
+  save();
+}
+
+async function renderProblemWorkspace(){
+  if(!v13Problem)return;const sections=await v13FetchSections();
+  const head='<div class="card problemWorkspaceHead"><div><h2>'+esc(v13Problem.title)+'</h2><div class=mut>'+esc(cur?.name||'Cliente')+' · Priorità '+esc(labelPriorityV13(v13Problem.priority))+' · '+esc(labelStatusV13(v13Problem.status))+'</div></div><div class=v13StatusRow><span class="pill blue">'+Number(v13Problem.progress||0)+'% completato</span><button onclick="openClient(\''+esc(v13Problem.client_ref)+'\',\'problems\')">Torna al cliente</button></div></div>'+v13PathHTML(sections);
+  let body='';
+  if(v13Section==='overview')body=await renderV13Overview();
+  else if(v13Section==='definition')body=renderV13Definition(sections);
+  else if(v13Section==='data')body=await renderV13Data(sections);
+  else if(v13Section==='causes')body=await renderV13Causes(sections);
+  else if(v13Section==='questions')body=await renderV13Questions(sections);
+  else if(v13Section==='solutions')body=await renderV13Solutions(sections);
+  else if(v13Section==='experiments')body=await renderV13Experiments(sections);
+  else if(v13Section==='requirements')body=await renderV13Requirements(sections);
+  else if(v13Section==='decisions')body=await renderV13Decisions(sections);
+  else if(v13Section==='design')body=await renderV13Design(sections);
+  else if(v13Section==='flow')body=await renderV13Flow(sections);
+  else if(v13Section==='tests')body=await renderV13Tests(sections);
+  else if(v13Section==='result')body=await renderV13Result(sections);
+  else if(v13Section==='files')body=await renderV13Files();
+  else if(v13Section==='history')body=await renderV13History();
+  view.innerHTML=head+body;
+}
+
+async function renderV13Overview(){
+  const [causes,questions,solutions,requirements,tests]=await Promise.all([v13Fetch('cp_problem_causes'),v13Fetch('cp_problem_questions'),v13Fetch('cp_solutions'),v13Fetch('cp_requirements'),v13Fetch('cp_problem_tests')]);
+  const selected=solutions.find(x=>x.status==='selected'),currentReq=requirements.filter(x=>x.is_current!==false),failed=tests.filter(x=>x.status==='fail').length;
+  return '<div class=v13Metric><div class=card><span class=mut>Cause confermate</span><b>'+causes.filter(x=>x.status==='confirmed').length+'</b></div><div class=card><span class=mut>Domande aperte</span><b>'+questions.filter(x=>x.status==='open').length+'</b></div><div class=card><span class=mut>Requisiti</span><b>'+currentReq.length+'</b></div><div class=card><span class=mut>Test falliti</span><b>'+failed+'</b></div></div><div class=v13Grid style="margin-top:14px"><div class=card><h3>Problema</h3><p>'+esc(v13Problem.problem_statement||v13Problem.summary||'Da definire')+'</p><h3>Soluzione scelta</h3><p>'+(selected?'<b>'+esc(selected.name)+'</b><br><span class=mut>'+esc(selected.description||'')+'</span>':'<span class=mut>Nessuna soluzione scelta.</span>')+'</p></div><div class=card><h3>Prossimo passo</h3><p class=mut>Il percorso è consigliato ma non obbligatorio. Puoi entrare in qualsiasi fase.</p><button class=primary onclick="switchProblemWorkspaceSection(\''+(v13Problem.current_phase||'definition')+'\')">Continua il lavoro</button></div></div>';
+}
+function renderV13Definition(sections){
+  return '<div class=card><div class="row between"><h3>Definizione del problema</h3><span id=v13SaveState class=v13SaveState>Salvataggio automatico</span></div><label>Qual è il problema?</label><textarea id=v13_problem_statement oninput="scheduleV13DefinitionSave()">'+esc(v13Problem.problem_statement||'')+'</textarea><div class=v13Two><div><label>Chi coinvolge?</label><textarea id=v13_people oninput="scheduleV13DefinitionSave()">'+esc(v13Problem.people_involved||'')+'</textarea></div><div><label>Quando si verifica?</label><textarea id=v13_occurrence oninput="scheduleV13DefinitionSave()">'+esc(v13Problem.occurrence_context||'')+'</textarea></div></div><label>Quali conseguenze produce?</label><textarea id=v13_consequences oninput="scheduleV13DefinitionSave()">'+esc(v13Problem.consequences||'')+'</textarea><label>Come viene gestito oggi?</label><textarea id=v13_handling oninput="scheduleV13DefinitionSave()">'+esc(v13Problem.current_handling||'')+'</textarea><label>Perché è importante risolverlo?</label><textarea id=v13_important oninput="scheduleV13DefinitionSave()">'+esc(v13Problem.why_important||'')+'</textarea><div class=v13Actions>'+sectionStatusButton(sections,'definition')+'</div></div>';
+}
+function scheduleV13DefinitionSave(){clearTimeout(v13SaveTimer);const s=document.getElementById('v13SaveState');if(s)s.textContent='Modifiche in attesa…';v13SaveTimer=setTimeout(saveV13Definition,650)}
+async function saveV13Definition(){
+  if(!v13Problem)return;const payload={problem_statement:document.getElementById('v13_problem_statement')?.value||'',people_involved:document.getElementById('v13_people')?.value||'',occurrence_context:document.getElementById('v13_occurrence')?.value||'',consequences:document.getElementById('v13_consequences')?.value||'',current_handling:document.getElementById('v13_handling')?.value||'',why_important:document.getElementById('v13_important')?.value||'',current_phase:'definition'};
+  const s=document.getElementById('v13SaveState');if(s)s.textContent='Salvataggio…';const ok=await updateV13Problem(payload);if(s)s.textContent=ok?'Salvato':'Errore di salvataggio';
+}
+
+async function renderV13Data(sections){
+  const rows=await v13Fetch('cp_problem_data','sort_order');const kind={fact:'Fatto verificato',observation:'Osservazione',hypothesis:'Ipotesi'};
+  return '<div class=card><div class="row between"><h3>Dati e osservazioni</h3><button class=primary onclick="newV13Data()">＋ Aggiungi</button></div><div class=v13List>'+(rows.length?rows.map(x=>'<div class=item><div class="row between"><div><b>'+esc(x.title||kind[x.kind])+'</b><div class=mut>'+esc(kind[x.kind]||x.kind)+'</div></div><button onclick="deleteV13Item(\'cp_problem_data\',\''+x.id+'\')">Elimina</button></div><p>'+esc(x.content)+'</p>'+(x.evidence?'<div class=mut>Fonte/evidenza: '+esc(x.evidence)+'</div>':'')+'</div>').join(''):'<div class=empty>Nessun dato registrato.</div>')+'</div><div class=v13Actions style="margin-top:12px">'+sectionStatusButton(sections,'data')+'</div></div>';
+}
+function newV13Data(){show('<h2>Nuovo dato</h2><label>Tipo</label><select id=v13_kind><option value=fact>Fatto verificato</option><option value=observation>Osservazione</option><option value=hypothesis>Ipotesi</option></select><label>Titolo</label><input id=v13_item_title><label>Contenuto *</label><textarea id=v13_item_content></textarea><label>Fonte / evidenza</label><textarea id=v13_item_evidence></textarea><button class=primary onclick="saveV13Data()">Aggiungi</button>')}
+async function saveV13Data(){const content=v13_item_content.value.trim();if(!content)return;const {error}=await SB.from('cp_problem_data').insert({workspace_id:workspaceId,client_ref:v13Problem.client_ref,problem_id:v13Problem.id,kind:v13_kind.value,title:v13_item_title.value,content,evidence:v13_item_evidence.value});if(error){console.error(error);alert('Errore nel salvataggio.');return}modal.close();await renderProblemWorkspace()}
+
+async function renderV13Causes(sections){
+  const rows=await v13Fetch('cp_problem_causes','sort_order'),label={to_verify:'Da verificare',confirmed:'Confermata',excluded:'Esclusa'};
+  return '<div class=card><div class="row between"><h3>Cause</h3><button class=primary onclick="newV13Cause()">＋ Nuova causa</button></div><div class=v13List>'+(rows.length?rows.map(x=>'<div class=item><div class="row between"><div><b>'+esc(x.title)+'</b><div class=mut>'+esc(x.description||'')+'</div></div><span class="pill '+(x.status==='confirmed'?'green':x.status==='excluded'?'red':'orange')+'">'+label[x.status]+'</span></div>'+(x.evidence?'<p class=mut>Evidenza: '+esc(x.evidence)+'</p>':'')+'<div class=v13Actions><button onclick="setV13CauseStatus(\''+x.id+'\',\'to_verify\')">Da verificare</button><button onclick="setV13CauseStatus(\''+x.id+'\',\'confirmed\')">Conferma</button><button onclick="setV13CauseStatus(\''+x.id+'\',\'excluded\')">Escludi</button><button onclick="deleteV13Item(\'cp_problem_causes\',\''+x.id+'\')">Elimina</button></div></div>').join(''):'<div class=empty>Nessuna causa registrata.</div>')+'</div><div class=v13Actions style="margin-top:12px">'+sectionStatusButton(sections,'causes')+'</div></div>';
+}
+function newV13Cause(){show('<h2>Nuova causa</h2><label>Titolo *</label><input id=v13_cause_title><label>Descrizione</label><textarea id=v13_cause_desc></textarea><label>Prova / evidenza</label><textarea id=v13_cause_evidence></textarea><button class=primary onclick="saveV13Cause()">Aggiungi causa</button>')}
+async function saveV13Cause(){if(!v13_cause_title.value.trim())return;const {error}=await SB.from('cp_problem_causes').insert({workspace_id:workspaceId,client_ref:v13Problem.client_ref,problem_id:v13Problem.id,title:v13_cause_title.value,description:v13_cause_desc.value,evidence:v13_cause_evidence.value});if(error){console.error(error);alert('Errore nel salvataggio.');return}modal.close();await renderProblemWorkspace()}
+async function setV13CauseStatus(id,status){const {error}=await SB.from('cp_problem_causes').update({status}).eq('id',id);if(error){console.error(error);return}await renderProblemWorkspace()}
+
+async function renderV13Questions(sections){
+  const rows=await v13Fetch('cp_problem_questions','sort_order');
+  return '<div class=card><div class="row between"><h3>Domande aperte</h3><button class=primary onclick="newV13Question()">＋ Nuova domanda</button></div><div class=v13List>'+(rows.length?rows.map(x=>'<div class=item><b>'+esc(x.question)+'</b>'+(x.why_needed?'<div class=mut>'+esc(x.why_needed)+'</div>':'')+'<label>Risposta</label><textarea id="qans_'+x.id+'">'+esc(x.answer||'')+'</textarea><div class=v13Actions><button class=primary onclick="resolveV13Question(\''+x.id+'\')">'+(x.status==='resolved'?'Aggiorna risposta':'Salva e risolvi')+'</button>'+(x.status==='resolved'?'<button onclick="reopenV13Question(\''+x.id+'\')">Riapri</button>':'')+'<span class="pill '+(x.status==='resolved'?'green':'orange')+'">'+(x.status==='resolved'?'Risolta':'Aperta')+'</span><button onclick="deleteV13Item(\'cp_problem_questions\',\''+x.id+'\')">Elimina</button></div></div>').join(''):'<div class=empty>Nessuna domanda aperta.</div>')+'</div><div class=v13Actions style="margin-top:12px">'+sectionStatusButton(sections,'questions')+'</div></div>';
+}
+function newV13Question(){show('<h2>Nuova domanda</h2><label>Domanda *</label><textarea id=v13_question></textarea><label>Perché serve saperlo?</label><textarea id=v13_question_why></textarea><button class=primary onclick="saveV13Question()">Aggiungi domanda</button>')}
+async function saveV13Question(){if(!v13_question.value.trim())return;const {error}=await SB.from('cp_problem_questions').insert({workspace_id:workspaceId,client_ref:v13Problem.client_ref,problem_id:v13Problem.id,question:v13_question.value,why_needed:v13_question_why.value});if(error){console.error(error);alert('Errore nel salvataggio.');return}modal.close();await renderProblemWorkspace()}
+async function resolveV13Question(id){const el=document.getElementById('qans_'+id);const {error}=await SB.from('cp_problem_questions').update({answer:el?.value||'',status:'resolved'}).eq('id',id);if(error){console.error(error);return}await renderProblemWorkspace()}
+async function reopenV13Question(id){const {error}=await SB.from('cp_problem_questions').update({status:'open'}).eq('id',id);if(error){console.error(error);return}await renderProblemWorkspace()}
+
+async function renderV13Solutions(sections){
+  const rows=await v13Fetch('cp_solutions','sort_order'),label={to_evaluate:'Da valutare',rejected:'Scartata',candidate:'Candidata',selected:'Scelta'};
+  return '<div class=card><div class="row between"><h3>Possibili soluzioni</h3><button class=primary onclick="newV13Solution()">＋ Nuova soluzione</button></div><div class=v13List>'+(rows.length?rows.map(x=>'<div class=item><div class="row between"><div><b>'+esc(x.name)+'</b><div class=mut>'+esc(x.description||'')+'</div></div><span class="pill '+(x.status==='selected'?'green':x.status==='rejected'?'red':'blue')+'">'+label[x.status]+'</span></div><div class=mut>Difficoltà: '+esc(x.difficulty||'—')+' · Costo: '+(x.estimated_cost==null?'—':'€ '+Number(x.estimated_cost).toFixed(2))+' · Ore: '+(x.estimated_hours==null?'—':Number(x.estimated_hours))+'</div><div class=v13Actions style="margin-top:9px"><button class=primary onclick="selectV13Solution(\''+x.id+'\')">Scegli soluzione</button><button onclick="setV13SolutionStatus(\''+x.id+'\',\'candidate\')">Candidata</button><button onclick="setV13SolutionStatus(\''+x.id+'\',\'rejected\')">Scarta</button><button onclick="deleteV13Item(\'cp_solutions\',\''+x.id+'\')">Elimina</button></div></div>').join(''):'<div class=empty>Nessuna soluzione registrata.</div>')+'</div><div class=v13Actions style="margin-top:12px">'+sectionStatusButton(sections,'solutions')+'</div></div>';
+}
+function newV13Solution(){show('<h2>Nuova soluzione</h2><label>Nome *</label><input id=v13_solution_name><label>Descrizione</label><textarea id=v13_solution_desc></textarea><div class=v13Two><div><label>Vantaggi (uno per riga)</label><textarea id=v13_solution_adv></textarea></div><div><label>Svantaggi (uno per riga)</label><textarea id=v13_solution_dis></textarea></div></div><label>Difficoltà</label><select id=v13_solution_diff><option value=low>Bassa</option><option value=medium selected>Media</option><option value=high>Alta</option></select><div class=v13Two><div><label>Costo stimato €</label><input id=v13_solution_cost type=number min=0 step=.01></div><div><label>Ore stimate</label><input id=v13_solution_hours type=number min=0 step=.25></div></div><button class=primary onclick="saveV13Solution()">Aggiungi soluzione</button>')}
+async function saveV13Solution(){if(!v13_solution_name.value.trim())return;const {error}=await SB.from('cp_solutions').insert({workspace_id:workspaceId,client_ref:v13Problem.client_ref,problem_id:v13Problem.id,name:v13_solution_name.value,description:v13_solution_desc.value,advantages:v13TextArr(v13_solution_adv.value),disadvantages:v13TextArr(v13_solution_dis.value),difficulty:v13_solution_diff.value,estimated_cost:v13N(v13_solution_cost.value),estimated_hours:v13N(v13_solution_hours.value)});if(error){console.error(error);alert('Errore nel salvataggio.');return}modal.close();await renderProblemWorkspace()}
+async function selectV13Solution(id){const {data:s}=await SB.from('cp_solutions').select('*').eq('id',id).single();await setV13SolutionStatus(id,'selected',false);if(await updateV13Problem({status:'solution_identified',current_phase:'requirements'}))syncLegacyProblemFromV13({status:'solution_identified',solution:s?.description||s?.name||''});await renderProblemWorkspace()}
+async function setV13SolutionStatus(id,status,rerender=true){const {error}=await SB.from('cp_solutions').update({status}).eq('id',id);if(error){console.error(error);return}if(rerender)await renderProblemWorkspace()}
+
+async function renderV13Experiments(sections){
+  const rows=await v13Fetch('cp_experiments'),solutions=await v13Fetch('cp_solutions','sort_order'),label={in_progress:'In prova',rejected:'Scartato',deepen:'Da approfondire',promoted:'Promosso'};
+  return '<div class=card><div class="row between"><h3>Esperimenti / Prototipi</h3><button class=primary onclick="newV13Experiment()">＋ Nuovo esperimento</button></div><div class=v13List>'+(rows.length?rows.map(x=>'<div class=item><div class="row between"><div><b>'+esc(x.title)+'</b><div class=mut>'+esc(x.objective||'')+'</div></div><span class=pill>'+esc(label[x.status]||x.status)+'</span></div><p>'+esc(x.what_tested||'')+'</p>'+(x.result?'<div><b>Risultato:</b> '+esc(x.result)+'</div>':'')+(x.conclusion?'<div class=mut>Conclusione: '+esc(x.conclusion)+'</div>':'')+'<div class=v13Actions style="margin-top:9px"><button onclick="setV13ExperimentStatus(\''+x.id+'\',\'deepen\')">Da approfondire</button><button class=primary onclick="setV13ExperimentStatus(\''+x.id+'\',\'promoted\')">Promuovi</button><button onclick="setV13ExperimentStatus(\''+x.id+'\',\'rejected\')">Scarta</button><button onclick="deleteV13Item(\'cp_experiments\',\''+x.id+'\')">Elimina</button></div></div>').join(''):'<div class=empty>Nessun esperimento.</div>')+'</div><div class=v13Actions style="margin-top:12px">'+sectionStatusButton(sections,'experiments')+'</div></div>';
+}
+function newV13Experiment(){show('<h2>Nuovo esperimento</h2><label>Titolo *</label><input id=v13_exp_title><label>Obiettivo</label><textarea id=v13_exp_obj></textarea><label>Cosa proviamo</label><textarea id=v13_exp_test></textarea><label>Risultato</label><textarea id=v13_exp_result></textarea><label>Problemi incontrati</label><textarea id=v13_exp_issues></textarea><label>Conclusione</label><textarea id=v13_exp_conclusion></textarea><button class=primary onclick="saveV13Experiment()">Aggiungi esperimento</button>')}
+async function saveV13Experiment(){if(!v13_exp_title.value.trim())return;const {error}=await SB.from('cp_experiments').insert({workspace_id:workspaceId,client_ref:v13Problem.client_ref,problem_id:v13Problem.id,title:v13_exp_title.value,objective:v13_exp_obj.value,what_tested:v13_exp_test.value,result:v13_exp_result.value,issues:v13_exp_issues.value,conclusion:v13_exp_conclusion.value});if(error){console.error(error);alert('Errore nel salvataggio.');return}modal.close();await renderProblemWorkspace()}
+async function setV13ExperimentStatus(id,status){const {error}=await SB.from('cp_experiments').update({status}).eq('id',id);if(error){console.error(error);return}await renderProblemWorkspace()}
+
+async function renderV13Requirements(sections){
+  const rows=await v13Fetch('cp_requirements','created_at'),current=rows.filter(x=>x.is_current!==false).sort((a,b)=>a.code.localeCompare(b.code));
+  return '<div class=card><div class="row between"><h3>Requisiti</h3><button class=primary onclick="newV13Requirement()">＋ Nuovo requisito</button></div><div class=v13List>'+(current.length?current.map(x=>'<div class=item><div class="row between"><div><b>'+esc(x.code)+' · '+esc(x.title)+'</b><div class=mut>'+esc(x.requirement_type==='functional'?'Funzionale':'Non funzionale')+' · v'+x.version+' · '+esc(labelPriorityV13(x.priority))+'</div></div><span class="pill '+(x.status==='completed'?'green':x.status==='confirmed'?'blue':'orange')+'">'+esc({draft:'Bozza',confirmed:'Confermato',completed:'Completato'}[x.status]||x.status)+'</span></div><p>'+esc(x.description||'')+'</p><div class=v13Actions><button onclick="newV13RequirementVersion(\''+x.id+'\')">Nuova versione</button><button onclick="setV13RequirementStatus(\''+x.id+'\',\'confirmed\')">Conferma</button><button onclick="setV13RequirementStatus(\''+x.id+'\',\'completed\')">Completato</button><button onclick="deleteV13Item(\'cp_requirements\',\''+x.id+'\')">Elimina</button></div></div>').join(''):'<div class=empty>Nessun requisito.</div>')+'</div><div class=v13Actions style="margin-top:12px">'+sectionStatusButton(sections,'requirements')+'</div></div>';
+}
+function nextV13ReqCode(){return 'R-'+String(Date.now()).slice(-5)}
+function newV13Requirement(){show('<h2>Nuovo requisito</h2><label>Codice</label><input id=v13_req_code value="'+nextV13ReqCode()+'"><label>Titolo *</label><input id=v13_req_title><label>Descrizione</label><textarea id=v13_req_desc></textarea><div class=v13Three><div><label>Tipo</label><select id=v13_req_type><option value=functional>Funzionale</option><option value=non_functional>Non funzionale</option></select></div><div><label>Priorità</label><select id=v13_req_priority><option value=critical>Critica</option><option value=high>Alta</option><option value=medium selected>Media</option><option value=low>Bassa</option></select></div><div><label>Obbligatorio</label><select id=v13_req_mandatory><option value=true>Sì</option><option value=false>No</option></select></div></div><button class=primary onclick="saveV13Requirement()">Aggiungi requisito</button>')}
+async function saveV13Requirement(){if(!v13_req_title.value.trim()||!v13_req_code.value.trim())return;const {error}=await SB.from('cp_requirements').insert({workspace_id:workspaceId,client_ref:v13Problem.client_ref,problem_id:v13Problem.id,code:v13_req_code.value.trim(),title:v13_req_title.value,description:v13_req_desc.value,requirement_type:v13_req_type.value,priority:v13_req_priority.value,mandatory:v13_req_mandatory.value==='true'});if(error){console.error(error);alert('Errore: controlla che il codice requisito non sia già usato.');return}modal.close();await renderProblemWorkspace()}
+async function newV13RequirementVersion(id){const {data:x,error}=await SB.from('cp_requirements').select('*').eq('id',id).single();if(error||!x)return;show('<h2>Nuova versione '+esc(x.code)+'</h2><label>Titolo</label><input id=v13_reqv_title value="'+esc(x.title)+'"><label>Descrizione</label><textarea id=v13_reqv_desc>'+esc(x.description||'')+'</textarea><label>Priorità</label><select id=v13_reqv_priority><option value=critical '+(x.priority==='critical'?'selected':'')+'>Critica</option><option value=high '+(x.priority==='high'?'selected':'')+'>Alta</option><option value=medium '+(x.priority==='medium'?'selected':'')+'>Media</option><option value=low '+(x.priority==='low'?'selected':'')+'>Bassa</option></select><button class=primary onclick="saveV13RequirementVersion(\''+x.id+'\',\''+x.code+'\','+(x.version+1)+',\''+x.requirement_type+'\','+x.mandatory+')">Crea v'+(x.version+1)+'</button>')}
+async function saveV13RequirementVersion(prevId,code,version,type,mandatory){const {error}=await SB.from('cp_requirements').insert({workspace_id:workspaceId,client_ref:v13Problem.client_ref,problem_id:v13Problem.id,code,title:v13_reqv_title.value,description:v13_reqv_desc.value,requirement_type:type,priority:v13_reqv_priority.value,mandatory,version,is_current:true,previous_version_id:prevId});if(error){console.error(error);alert('Errore creando la nuova versione.');return}modal.close();await renderProblemWorkspace()}
+async function setV13RequirementStatus(id,status){const {error}=await SB.from('cp_requirements').update({status}).eq('id',id);if(error){console.error(error);return}await renderProblemWorkspace()}
+
+async function renderV13Decisions(sections){
+  const rows=await v13Fetch('cp_decisions','decided_at');
+  return '<div class=card><div class="row between"><h3>Decisioni</h3><button class=primary onclick="newV13Decision()">＋ Registra decisione</button></div><div class=v13List>'+(rows.length?rows.map(x=>'<div class=item><div class="row between"><b>'+esc(x.title)+'</b><span class=pill>'+new Date(x.decided_at).toLocaleDateString('it-IT')+'</span></div><p>'+esc(x.decision)+'</p>'+(x.rationale?'<div class=mut>Motivo: '+esc(x.rationale)+'</div>':'')+(x.impact?'<div class=mut>Impatto: '+esc(x.impact)+'</div>':'')+'<div class=v13Actions style="margin-top:8px"><button onclick="deleteV13Item(\'cp_decisions\',\''+x.id+'\')">Elimina</button></div></div>').join(''):'<div class=empty>Nessuna decisione registrata.</div>')+'</div><div class=v13Actions style="margin-top:12px">'+sectionStatusButton(sections,'decisions')+'</div></div>';
+}
+function newV13Decision(){show('<h2>Nuova decisione</h2><label>Titolo *</label><input id=v13_dec_title><label>Decisione *</label><textarea id=v13_dec_value></textarea><label>Alternative considerate (una per riga)</label><textarea id=v13_dec_alt></textarea><label>Perché questa scelta?</label><textarea id=v13_dec_reason></textarea><label>Impatto previsto</label><textarea id=v13_dec_impact></textarea><button class=primary onclick="saveV13Decision()">Registra decisione</button>')}
+async function saveV13Decision(){if(!v13_dec_title.value.trim()||!v13_dec_value.value.trim())return;const {error}=await SB.from('cp_decisions').insert({workspace_id:workspaceId,client_ref:v13Problem.client_ref,problem_id:v13Problem.id,title:v13_dec_title.value,decision:v13_dec_value.value,alternatives:v13TextArr(v13_dec_alt.value),rationale:v13_dec_reason.value,impact:v13_dec_impact.value});if(error){console.error(error);alert('Errore nel salvataggio.');return}modal.close();await renderProblemWorkspace()}
+
+async function renderV13Design(sections){
+  const rows=await v13Fetch('cp_design_items','sort_order'),labels={architecture:'Architettura',database:'Database',roles:'Ruoli',permissions:'Permessi',api:'API',integration:'Integrazione',interface:'Interfaccia',other:'Altro'};
+  return '<div class=card><div class="row between"><h3>Progettazione</h3><button class=primary onclick="newV13DesignItem()">＋ Elemento tecnico</button></div><div class=v13List>'+(rows.length?rows.map(x=>'<div class=item><div class="row between"><div><b>'+esc(x.title)+'</b><div class=mut>'+esc(labels[x.item_type]||x.item_type)+'</div></div><button onclick="deleteV13Item(\'cp_design_items\',\''+x.id+'\')">Elimina</button></div><p>'+esc(x.content||'')+'</p></div>').join(''):'<div class=empty>Nessun elemento di progettazione.</div>')+'</div><div class=v13Actions style="margin-top:12px">'+sectionStatusButton(sections,'design')+'</div></div>';
+}
+function newV13DesignItem(){show('<h2>Nuovo elemento di progettazione</h2><label>Tipo</label><select id=v13_design_type><option value=architecture>Architettura</option><option value=database>Database</option><option value=roles>Ruoli</option><option value=permissions>Permessi</option><option value=api>API</option><option value=integration>Integrazione</option><option value=interface>Interfaccia</option><option value=other>Altro</option></select><label>Titolo *</label><input id=v13_design_title><label>Contenuto</label><textarea class=long id=v13_design_content></textarea><button class=primary onclick="saveV13DesignItem()">Aggiungi</button>')}
+async function saveV13DesignItem(){if(!v13_design_title.value.trim())return;const {error}=await SB.from('cp_design_items').insert({workspace_id:workspaceId,client_ref:v13Problem.client_ref,problem_id:v13Problem.id,item_type:v13_design_type.value,title:v13_design_title.value,content:v13_design_content.value});if(error){console.error(error);alert('Errore nel salvataggio.');return}modal.close();await renderProblemWorkspace()}
+
+async function renderV13Flow(sections){
+  const rows=(await v13Fetch('cp_flow_items','created_at')).filter(x=>x.is_current!==false).sort((a,b)=>a.code.localeCompare(b.code));
+  return '<div class=card><div class="row between"><h3>Flowchart / Algoritmi</h3><button class=primary onclick="newV13Flow()">＋ Nuovo flusso</button></div><div class=v13List>'+(rows.length?rows.map(x=>'<div class=item><div class="row between"><div><b>'+esc(x.code)+' · '+esc(x.title)+'</b><div class=mut>Versione '+x.version+'</div></div><button onclick="newV13FlowVersion(\''+x.id+'\')">Nuova versione</button></div>'+(x.description?'<p>'+esc(x.description)+'</p>':'')+'<div class=v13Code>'+esc(x.pseudocode||'Nessun pseudocodice')+'</div><div class=v13Actions style="margin-top:9px"><button onclick="deleteV13Item(\'cp_flow_items\',\''+x.id+'\')">Elimina</button></div></div>').join(''):'<div class=empty>Nessun flowchart/algoritmo.</div>')+'</div><div class=v13Actions style="margin-top:12px">'+sectionStatusButton(sections,'flow')+'</div></div>';
+}
+function nextV13FlowCode(){return 'F-'+String(Date.now()).slice(-5)}
+function newV13Flow(){show('<h2>Nuovo flow / algoritmo</h2><label>Codice</label><input id=v13_flow_code value="'+nextV13FlowCode()+'"><label>Titolo *</label><input id=v13_flow_title><label>Descrizione</label><textarea id=v13_flow_desc></textarea><label>Pseudocodice / IF-THEN</label><textarea class=long id=v13_flow_code_text></textarea><label>Regole (una per riga)</label><textarea id=v13_flow_rules></textarea><button class=primary onclick="saveV13Flow()">Aggiungi flow</button>')}
+async function saveV13Flow(){if(!v13_flow_title.value.trim()||!v13_flow_code.value.trim())return;const {error}=await SB.from('cp_flow_items').insert({workspace_id:workspaceId,client_ref:v13Problem.client_ref,problem_id:v13Problem.id,code:v13_flow_code.value.trim(),title:v13_flow_title.value,description:v13_flow_desc.value,pseudocode:v13_flow_code_text.value,rules:v13TextArr(v13_flow_rules.value)});if(error){console.error(error);alert('Errore: controlla che il codice flow non sia già usato.');return}modal.close();await renderProblemWorkspace()}
+async function newV13FlowVersion(id){const {data:x,error}=await SB.from('cp_flow_items').select('*').eq('id',id).single();if(error||!x)return;show('<h2>Nuova versione '+esc(x.code)+'</h2><label>Titolo</label><input id=v13_flowv_title value="'+esc(x.title)+'"><label>Descrizione</label><textarea id=v13_flowv_desc>'+esc(x.description||'')+'</textarea><label>Pseudocodice</label><textarea class=long id=v13_flowv_code>'+esc(x.pseudocode||'')+'</textarea><label>Regole (una per riga)</label><textarea id=v13_flowv_rules>'+esc(v13ArrText(x.rules))+'</textarea><button class=primary onclick="saveV13FlowVersion(\''+x.id+'\',\''+x.code+'\','+(x.version+1)+')">Crea v'+(x.version+1)+'</button>')}
+async function saveV13FlowVersion(prevId,code,version){const {error}=await SB.from('cp_flow_items').insert({workspace_id:workspaceId,client_ref:v13Problem.client_ref,problem_id:v13Problem.id,code,title:v13_flowv_title.value,description:v13_flowv_desc.value,pseudocode:v13_flowv_code.value,rules:v13TextArr(v13_flowv_rules.value),version,is_current:true,previous_version_id:prevId});if(error){console.error(error);alert('Errore creando la nuova versione.');return}modal.close();await renderProblemWorkspace()}
+
+async function renderV13Tests(sections){
+  const rows=await v13Fetch('cp_problem_tests','created_at'),reqs=(await v13Fetch('cp_requirements','created_at')).filter(x=>x.is_current!==false),reqMap=Object.fromEntries(reqs.map(x=>[x.id,x.code+' · '+x.title]));
+  return '<div class=card><div class="row between"><h3>Test</h3><button class=primary onclick="newV13Test()">＋ Nuovo test</button></div><div class=v13List>'+(rows.length?rows.map(x=>'<div class=item><div class="row between"><div><b>'+esc(x.code)+' · '+esc(x.title)+'</b><div class=mut>'+(x.requirement_id?esc(reqMap[x.requirement_id]||'Requisito collegato'):'Nessun requisito collegato')+'</div></div><span class="pill '+(x.status==='pass'?'green':x.status==='fail'?'red':x.status==='blocked'?'orange':'')+'">'+esc({not_run:'Non eseguito',pass:'PASS',fail:'FAIL',blocked:'Bloccato'}[x.status]||x.status)+'</span></div><div class=v13Two><div><b>Condizioni</b><p>'+esc(x.conditions||'—')+'</p></div><div><b>Risultato atteso</b><p>'+esc(x.expected_result||'—')+'</p></div></div><label>Risultato reale</label><textarea id="testactual_'+x.id+'">'+esc(x.actual_result||'')+'</textarea><div class=v13Actions><button class=primary onclick="runV13Test(\''+x.id+'\',\'pass\')">PASS</button><button onclick="runV13Test(\''+x.id+'\',\'fail\')">FAIL</button><button onclick="runV13Test(\''+x.id+'\',\'blocked\')">Bloccato</button><button onclick="deleteV13Item(\'cp_problem_tests\',\''+x.id+'\')">Elimina</button></div></div>').join(''):'<div class=empty>Nessun test definito.</div>')+'</div><div class=v13Actions style="margin-top:12px">'+sectionStatusButton(sections,'tests')+'</div></div>';
+}
+async function newV13Test(){const reqs=(await v13Fetch('cp_requirements','created_at')).filter(x=>x.is_current!==false);show('<h2>Nuovo test</h2><label>Codice</label><input id=v13_test_code value="T-'+String(Date.now()).slice(-5)+'"><label>Titolo *</label><input id=v13_test_title><label>Requisito collegato</label><select id=v13_test_req><option value="">Nessuno</option>'+reqs.map(x=>'<option value="'+x.id+'">'+esc(x.code+' · '+x.title)+'</option>').join('')+'</select><label>Condizioni / input</label><textarea id=v13_test_cond></textarea><label>Passaggi (uno per riga)</label><textarea id=v13_test_steps></textarea><label>Risultato atteso</label><textarea id=v13_test_expected></textarea><button class=primary onclick="saveV13Test()">Aggiungi test</button>')}
+async function saveV13Test(){if(!v13_test_title.value.trim()||!v13_test_code.value.trim())return;const {error}=await SB.from('cp_problem_tests').insert({workspace_id:workspaceId,client_ref:v13Problem.client_ref,problem_id:v13Problem.id,requirement_id:v13_test_req.value||null,code:v13_test_code.value.trim(),title:v13_test_title.value,conditions:v13_test_cond.value,steps:v13TextArr(v13_test_steps.value),expected_result:v13_test_expected.value});if(error){console.error(error);alert('Errore: controlla che il codice test non sia già usato.');return}modal.close();await renderProblemWorkspace()}
+async function runV13Test(id,status){const actual=document.getElementById('testactual_'+id)?.value||'';const {error}=await SB.from('cp_problem_tests').update({status,actual_result:actual}).eq('id',id);if(error){console.error(error);return}await renderProblemWorkspace()}
+
+async function renderV13Result(sections){
+  const {data,error}=await SB.from('cp_problem_results').select('*').eq('problem_id',v13Problem.id).maybeSingle();if(error)console.error(error);const x=data||{};
+  return '<div class=card><div class="row between"><h3>Risultato</h3><span id=v13ResultSave class=v13SaveState>Salvataggio manuale</span></div><label>Cosa abbiamo risolto</label><textarea id=v13_result_solved>'+esc(x.solved_summary||'')+'</textarea><label>Come</label><textarea id=v13_result_impl>'+esc(x.implementation_summary||'')+'</textarea><label>Cosa rimane aperto</label><textarea id=v13_result_open>'+esc(x.remaining_open||'')+'</textarea><label>Risultato ottenuto</label><textarea id=v13_result_outcome>'+esc(x.outcome||'')+'</textarea><label>Prossimo passo</label><textarea id=v13_result_next>'+esc(x.next_step||'')+'</textarea><div class=v13Actions><button class=primary onclick="saveV13Result()">Salva risultato</button>'+sectionStatusButton(sections,'result')+'<button onclick="markV13ProblemResolved()">Segna problema come risolto</button></div></div>';
+}
+async function saveV13Result(){const payload={workspace_id:workspaceId,client_ref:v13Problem.client_ref,problem_id:v13Problem.id,solved_summary:v13_result_solved.value,implementation_summary:v13_result_impl.value,remaining_open:v13_result_open.value,outcome:v13_result_outcome.value,next_step:v13_result_next.value};const existing=await SB.from('cp_problem_results').select('id').eq('problem_id',v13Problem.id).maybeSingle();let r;if(existing.data?.id)r=await SB.from('cp_problem_results').update(payload).eq('id',existing.data.id);else r=await SB.from('cp_problem_results').insert(payload);const s=document.getElementById('v13ResultSave');if(r.error){console.error(r.error);if(s)s.textContent='Errore';return}if(s)s.textContent='Salvato'}
+async function markV13ProblemResolved(){if(!confirm('Confermi che questo problema è risolto?'))return;await saveV13Result();if(await updateV13Problem({status:'resolved',current_phase:'result'})){syncLegacyProblemFromV13({status:'resolved'});await setV13SectionStatus('result','completed')}}
+
+async function renderV13Files(){
+  const rows=await v13Fetch('cp_problem_files');
+  return '<div class=card><div class="row between"><div><h3>File e riferimenti</h3><div class=mut>In V13.0 puoi registrare link e riferimenti. Il caricamento file completo arriverà con l’archivio versionato.</div></div><button class=primary onclick="newV13FileRef()">＋ Aggiungi riferimento</button></div><div class=v13List style="margin-top:12px">'+(rows.length?rows.map(x=>'<div class=item><div class="row between"><div><b>'+esc(x.file_name)+'</b><div class=mut>'+esc(x.description||'')+'</div></div><button onclick="deleteV13Item(\'cp_problem_files\',\''+x.id+'\')">Elimina</button></div>'+(x.external_url?'<p><a class=v13Link href="'+esc(x.external_url)+'" target=_blank rel=noopener>Apri riferimento</a></p>':'')+'</div>').join(''):'<div class=empty>Nessun riferimento.</div>')+'</div></div>';
+}
+function newV13FileRef(){show('<h2>Nuovo riferimento</h2><label>Nome *</label><input id=v13_file_name><label>URL</label><input id=v13_file_url placeholder="https://..."><label>Descrizione</label><textarea id=v13_file_desc></textarea><button class=primary onclick="saveV13FileRef()">Aggiungi</button>')}
+async function saveV13FileRef(){if(!v13_file_name.value.trim())return;const {error}=await SB.from('cp_problem_files').insert({workspace_id:workspaceId,client_ref:v13Problem.client_ref,problem_id:v13Problem.id,file_name:v13_file_name.value,external_url:v13_file_url.value||null,description:v13_file_desc.value});if(error){console.error(error);alert('Errore nel salvataggio.');return}modal.close();await renderProblemWorkspace()}
+
+async function renderV13History(){
+  const rows=await v13Fetch('cp_problem_history','created_at',false);
+  return '<div class=card><h3>Storico automatico</h3><p class=mut>Gli eventi importanti vengono registrati automaticamente e non possono essere riscritti dall’interfaccia.</p><div class=v13List>'+(rows.length?rows.map(x=>'<div class=item><b>'+esc(x.summary)+'</b><div class=mut>'+new Date(x.created_at).toLocaleString('it-IT')+' · '+esc(x.event_type)+'</div></div>').join(''):'<div class=empty>Nessun evento ancora registrato.</div>')+'</div></div>';
+}
+
+async function deleteV13Item(table,id){if(!confirm('Eliminare questo elemento?'))return;const {error}=await SB.from(table).delete().eq('id',id);if(error){console.error(error);alert('Non è stato possibile eliminare l’elemento.');return}await renderProblemWorkspace()}
+
 function newProject(){
   if(!cur)return;
   if(cur.archived)return alert('Riattiva prima il cliente.');
