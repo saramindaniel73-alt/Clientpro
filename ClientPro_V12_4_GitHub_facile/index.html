@@ -645,6 +645,11 @@ dialog::backdrop{background:rgba(0,0,0,.72);backdrop-filter:blur(4px)}
 .v13StatusRow{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
 .v13Link{color:#78baff;text-decoration:none}.v13Link:hover{text-decoration:underline}
 @media(max-width:900px){.v13Grid{grid-template-columns:1fr}.v13Metric{grid-template-columns:1fr 1fr}.v13Two,.v13Three{grid-template-columns:1fr}}
+.v13AiFab{position:fixed;right:20px;bottom:20px;z-index:40;border:0;border-radius:999px;padding:13px 16px;background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff;font-weight:900;box-shadow:0 12px 30px rgba(0,0,0,.28)}
+.v13AiPanel{position:fixed;right:18px;bottom:78px;width:min(430px,calc(100vw - 28px));max-height:74vh;overflow:auto;z-index:45;background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.38);padding:14px}
+.v13AiPanel.hide{display:none}.v13AiHead{display:flex;justify-content:space-between;gap:10px;align-items:center}.v13AiModes{display:flex;gap:7px;margin:10px 0}.v13AiModes button.on{background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff;border-color:transparent}.v13AiQuick{display:flex;gap:7px;flex-wrap:wrap;margin:10px 0}.v13AiQuick button{padding:7px 9px;font-size:12px}.v13AiAnswer{white-space:pre-wrap;line-height:1.5;border:1px solid var(--line);background:var(--panel2);padding:11px;border-radius:11px;min-height:70px}.v13AiProposal{margin-top:10px;border:1px solid rgba(40,211,157,.3);background:rgba(40,211,157,.06);padding:10px;border-radius:11px}.v13AiContext{font-size:11px;color:var(--muted);margin-top:7px}.v13AiBusy{opacity:.7;pointer-events:none}
+@media(max-width:700px){.v13AiFab{right:12px;bottom:12px}.v13AiPanel{right:10px;bottom:66px;max-height:78vh}}
+
 </style>
 
 </head><body>
@@ -655,7 +660,7 @@ dialog::backdrop{background:rgba(0,0,0,.72);backdrop-filter:blur(4px)}
 <main class="main"><div class="mobileBrand click" onclick="go('home')"><div class="mark">CP</div><b>ClientPro</b></div>
 <div class="top"><div><small id="crumb" class="mut">ClientPro</small><h1 id="title">Dashboard</h1></div><input class="topSearch" placeholder="Cerca clienti, progetti, attività..."><div class="actions">
 <button id="installBtn" class="installBtn" title="Installa ClientPro" onclick="installApp()">↓ <span class="accountText">Installa</span></button>
-<span class="betaBadge" title="Versione installata">v13.0</span>
+<span class="betaBadge" title="Versione installata">v13.1</span>
 <button class="accountBtn" title="Account e impostazioni" onclick="openAccountSettings()"><span class="avatar" id="accountAvatar">CP</span><span class="accountText" id="accountLabel">Account</span></button>
 <button class="primary" onclick="newClient()">＋ Nuovo cliente</button>
 </div></div><div id="offlineBanner" class="offlineBanner"></div><div id="view"></div></main>
@@ -678,7 +683,7 @@ let deferredInstallPrompt=null;
 let activeView='section';
 let lastSyncAt=null;
 let localDirty=false;
-const APP_VERSION='13.0';
+const APP_VERSION='13.1';
 
 function syncTimeText(){
   return lastSyncAt ? 'Ultima sincronizzazione: '+lastSyncAt.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'}) : 'Sincronizzazione non ancora completata';
@@ -906,6 +911,9 @@ let v13Problem=null;
 let v13LegacyIndex=null;
 let v13Section='overview';
 let v13SaveTimer=null;
+let v13AiMode='tutor';
+let v13AiLast=null;
+let v13AiBusy=false;
 const save=()=>{localDirty=true;localStorage.setItem(STORE,JSON.stringify(db));scheduleCloudSave()};
 const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
 
@@ -1225,7 +1233,7 @@ async function openAccountSettings(){
       <div class="settingBox"><h3>Ripristino dati</h3><p>Importa un backup ClientPro precedentemente esportato.</p><input id="importFile" type="file" accept=".json,application/json" onchange="importData(this.files[0])"></div>
       <div class="settingBox"><h3>Installazione</h3><p>Installa ClientPro sul dispositivo per aprirla come una normale app.</p><button onclick="installApp()">Installa app</button></div>
       <div class="settingBox"><h3>Acquisizione clienti</h3><p>Il motore di ricerca usa Geoapify. La chiave API resta salvata solo su questo dispositivo.</p><label>Geoapify API key</label><input id="geoKeySetting" type="password" value="${esc(getGeoKey())}" placeholder="Incolla la chiave Geoapify"><label>URL informativa privacy</label><input id="privacyUrlSetting" value="${esc(db.commercial?.privacyNoticeUrl||'')}" placeholder="https://..."><label>Firma commerciale (facoltativa)</label><input id="signatureSetting" value="${esc(db.commercial?.signature||'')}" placeholder="Nome / attività"><button onclick="saveCommercialSettings()">Salva impostazioni commerciali</button></div>
-      <div class="settingBox"><h3>Versione</h3><p>ClientPro Developer Workspace V13.0<br>Archivio clienti, storico lavori, consuntivi e indirizzi.</p><span class="betaBadge">COMMERCIAL BETA · v12.8</span></div>
+      <div class="settingBox"><h3>Versione</h3><p>ClientPro Developer Workspace V13.1<br>Archivio clienti, storico lavori, consuntivi e indirizzi.</p><span class="betaBadge">COMMERCIAL BETA · v12.8</span></div>
     </div>`);
   requestAnimationFrame(()=>{try{modal.scrollTop=0;modalBody.scrollTop=0}catch(e){}});
 }
@@ -1869,7 +1877,51 @@ async function renderProblemWorkspace(){
   else if(v13Section==='result')body=await renderV13Result(sections);
   else if(v13Section==='files')body=await renderV13Files();
   else if(v13Section==='history')body=await renderV13History();
-  view.innerHTML=head+body;
+  view.innerHTML=head+body+v13AiShell();
+}
+
+
+function v13AiShell(){
+  return '<button class="v13AiFab" onclick="toggleV13Ai()">✦ AI ClientPro</button><div id="v13AiPanel" class="v13AiPanel hide"><div class=v13AiHead><div><b>AI ClientPro</b><div class=mut style="font-size:12px">'+(v13AiMode==='tutor'?'Tutor · ti guida':'Tecnica · propone soluzioni')+'</div></div><button onclick="toggleV13Ai()">✕</button></div><div class=v13AiModes><button id=aiModeTutor class="'+(v13AiMode==='tutor'?'on':'')+'" onclick="setV13AiMode(\'tutor\')">AI Tutor</button><button id=aiModeTech class="'+(v13AiMode==='technical'?'on':'')+'" onclick="setV13AiMode(\'technical\')">AI Tecnica</button></div><div class=v13AiQuick>'+v13AiQuickButtons()+'</div><label>Cosa vuoi chiedere?</label><textarea id=v13AiPrompt placeholder="Es. Analizza questo problema e dimmi cosa manca."></textarea><div class=v13Actions><button class=primary onclick="runV13Ai(\'custom\')">Chiedi all’AI</button><button onclick="runV13Ai(\'analyze\')">Analizza problema</button></div><div id=v13AiContext class=v13AiContext>Contesto: problema corrente + dati delle sue sezioni. I segreti non vengono inclusi.</div><div id=v13AiResult style="margin-top:10px"></div></div>'
+}
+function v13AiQuickButtons(){
+  if(v13AiMode==='tutor')return '<button onclick="runV13Ai(\'analyze\')">Cosa manca?</button><button onclick="runV13Ai(\'custom\',\'Spiegami il prossimo passo in modo semplice\')">Prossimo passo</button>'
+  return '<button onclick="runV13Ai(\'causes\')">Proponi cause</button><button onclick="runV13Ai(\'questions\')">Genera domande</button><button onclick="runV13Ai(\'solutions\')">Proponi soluzioni</button><button onclick="runV13Ai(\'requirements\')">Genera requisiti</button><button onclick="runV13Ai(\'design\')">Progetta</button><button onclick="runV13Ai(\'flow\')">Crea flow</button><button onclick="runV13Ai(\'tests\')">Genera test</button>'
+}
+function toggleV13Ai(){const p=document.getElementById('v13AiPanel');if(p)p.classList.toggle('hide')}
+function setV13AiMode(mode){v13AiMode=mode;const p=document.getElementById('v13AiPanel');if(p){const open=!p.classList.contains('hide');p.outerHTML=v13AiShell().match(/<div id="v13AiPanel"[\s\S]*<\/div>$/)?.[0]||p.outerHTML;if(open)document.getElementById('v13AiPanel')?.classList.remove('hide')}}
+function v13AiRenderResult(data){
+  const box=document.getElementById('v13AiResult');if(!box)return;v13AiLast=data;
+  let h='<div class=v13AiAnswer>'+esc(data.answer||'Nessuna risposta.')+'</div>';
+  if(data.next_step)h+='<div class=v13Note style="margin-top:8px"><b>Prossimo passo:</b> '+esc(data.next_step)+'</div>';
+  if(data.proposal&&Array.isArray(data.proposal.items)&&data.proposal.items.length){h+='<div class=v13AiProposal><b>Proposta pronta da approvare</b><div class=mut>'+data.proposal.items.length+' elementi · '+esc(data.proposal.target||'')+'</div><div class=v13Actions style="margin-top:8px"><button class=primary onclick="approveV13AiProposal()">Approva e salva</button><button onclick="discardV13AiProposal()">Scarta</button></div></div>'}
+  box.innerHTML=h;
+}
+async function runV13Ai(action='custom',forcedPrompt=''){
+  if(v13AiBusy||!v13Problem)return;const panel=document.getElementById('v13AiPanel');if(panel)panel.classList.add('v13AiBusy');v13AiBusy=true;
+  const out=document.getElementById('v13AiResult');if(out)out.innerHTML='<div class=v13Note>AI ClientPro sta lavorando…</div>';
+  const prompt=forcedPrompt||document.getElementById('v13AiPrompt')?.value||'';
+  try{
+    const {data,error}=await SB.functions.invoke('clientpro-ai',{body:{problemId:v13Problem.id,mode:v13AiMode,action,prompt}});
+    if(error)throw error;if(data?.error)throw new Error(data.error);v13AiRenderResult(data||{});
+  }catch(e){console.error(e);if(out)out.innerHTML='<div class=v13Note><b>AI non disponibile.</b><br>'+esc(e?.message||'Controlla la configurazione server dell’AI.')+'</div>'}
+  finally{v13AiBusy=false;if(panel)panel.classList.remove('v13AiBusy')}
+}
+function discardV13AiProposal(){v13AiLast=null;const box=document.getElementById('v13AiResult');if(box)box.innerHTML='<div class=v13Note>Proposta scartata. Nessuna modifica salvata.</div>'}
+async function approveV13AiProposal(){
+  const proposal=v13AiLast?.proposal;if(!proposal||!Array.isArray(proposal.items)||!proposal.items.length)return;
+  const base={workspace_id:workspaceId,client_ref:v13Problem.client_ref,problem_id:v13Problem.id};
+  let table='',rows=[];
+  if(proposal.target==='causes'){table='cp_problem_causes';rows=proposal.items.map(x=>({...base,title:x.title||'Causa proposta',description:x.description||'',evidence:x.evidence||'',status:'to_verify'}))}
+  else if(proposal.target==='questions'){table='cp_problem_questions';rows=proposal.items.map(x=>({...base,question:x.question||'Domanda proposta',why_needed:x.why_needed||'',status:'open'}))}
+  else if(proposal.target==='solutions'){table='cp_solutions';rows=proposal.items.map(x=>({...base,name:x.name||'Soluzione proposta',description:x.description||'',advantages:Array.isArray(x.advantages)?x.advantages:[],disadvantages:Array.isArray(x.disadvantages)?x.disadvantages:[],difficulty:['low','medium','high'].includes(x.difficulty)?x.difficulty:'medium',estimated_cost:x.estimated_cost??null,estimated_hours:x.estimated_hours??null,status:'candidate'}))}
+  else if(proposal.target==='requirements'){table='cp_requirements';rows=proposal.items.map(x=>({...base,title:x.title||'Requisito',description:x.description||'',requirement_type:['functional','non_functional','constraint'].includes(x.requirement_type)?x.requirement_type:'functional',priority:['low','medium','high','critical'].includes(x.priority)?x.priority:'medium',mandatory:x.mandatory!==false,status:'draft'}))}
+  else if(proposal.target==='design'){table='cp_design_items';rows=proposal.items.map(x=>({...base,item_type:x.item_type||'note',title:x.title||'Elemento di progetto',content:x.content||''}))}
+  else if(proposal.target==='flow'){table='cp_flow_items';rows=proposal.items.map((x,i)=>({...base,code:'FLOW-'+Date.now()+'-'+(i+1),title:x.title||'Flusso',description:x.description||'',pseudocode:x.pseudocode||'',rules:Array.isArray(x.rules)?x.rules:[],version:1,is_current:true}))}
+  else if(proposal.target==='tests'){table='cp_problem_tests';rows=proposal.items.map((x,i)=>({...base,code:'TEST-'+Date.now()+'-'+(i+1),title:x.title||'Test',conditions:x.conditions||'',steps:Array.isArray(x.steps)?x.steps:[],expected_result:x.expected_result||'',status:'not_run'}))}
+  if(!table||!rows.length){alert('Questa proposta non può essere salvata automaticamente.');return}
+  const {error}=await SB.from(table).insert(rows);if(error){console.error(error);alert('Errore nel salvataggio della proposta AI.');return}
+  v13AiLast=null;await renderProblemWorkspace();const p=document.getElementById('v13AiPanel');if(p)p.classList.remove('hide');
 }
 
 async function renderV13Overview(){
