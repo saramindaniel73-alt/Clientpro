@@ -665,7 +665,7 @@ dialog::backdrop{background:rgba(0,0,0,.72);backdrop-filter:blur(4px)}
 <main class="main"><div class="mobileBrand click" onclick="go('home')"><div class="mark">CP</div><b>ClientPro</b></div>
 <div class="top"><div><small id="crumb" class="mut">ClientPro</small><h1 id="title">Dashboard</h1></div><input class="topSearch" placeholder="Cerca clienti, progetti, attività..."><div class="actions">
 <button id="installBtn" class="installBtn" title="Installa ClientPro" onclick="installApp()">↓ <span class="accountText">Installa</span></button>
-<span class="betaBadge" title="Versione installata">v13.1.1</span>
+<span class="betaBadge" title="Versione installata">v13.1.2</span>
 <button class="accountBtn" title="Account e impostazioni" onclick="openAccountSettings()"><span class="avatar" id="accountAvatar">CP</span><span class="accountText" id="accountLabel">Account</span></button>
 <button class="primary" onclick="newClient()">＋ Nuovo cliente</button>
 </div></div><div id="offlineBanner" class="offlineBanner"></div><div id="view"></div></main>
@@ -688,7 +688,7 @@ let deferredInstallPrompt=null;
 let activeView='section';
 let lastSyncAt=null;
 let localDirty=false;
-const APP_VERSION='13.1.1';
+const APP_VERSION='13.1.2';
 
 function syncTimeText(){
   return lastSyncAt ? 'Ultima sincronizzazione: '+lastSyncAt.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'}) : 'Sincronizzazione non ancora completata';
