@@ -648,6 +648,11 @@ dialog::backdrop{background:rgba(0,0,0,.72);backdrop-filter:blur(4px)}
 .v13AiFab{position:fixed;right:20px;bottom:20px;z-index:40;border:0;border-radius:999px;padding:13px 16px;background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff;font-weight:900;box-shadow:0 12px 30px rgba(0,0,0,.28)}
 .v13AiPanel{position:fixed;right:18px;bottom:78px;width:min(430px,calc(100vw - 28px));max-height:74vh;overflow:auto;z-index:45;background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.38);padding:14px}
 .v13AiPanel.hide{display:none}.v13AiHead{display:flex;justify-content:space-between;gap:10px;align-items:center}.v13AiModes{display:flex;gap:7px;margin:10px 0}.v13AiModes button.on{background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff;border-color:transparent}.v13AiQuick{display:flex;gap:7px;flex-wrap:wrap;margin:10px 0}.v13AiQuick button{padding:7px 9px;font-size:12px}.v13AiAnswer{white-space:pre-wrap;line-height:1.5;border:1px solid var(--line);background:var(--panel2);padding:11px;border-radius:11px;min-height:70px}.v13AiProposal{margin-top:10px;border:1px solid rgba(40,211,157,.3);background:rgba(40,211,157,.06);padding:10px;border-radius:11px}.v13AiContext{font-size:11px;color:var(--muted);margin-top:7px}.v13AiBusy{opacity:.7;pointer-events:none}
+.v13AiHistory{display:flex;flex-direction:column;gap:7px;max-height:190px;overflow:auto;margin:8px 0}
+.v13AiMsg{padding:8px 10px;border:1px solid var(--line);border-radius:10px;font-size:12px;line-height:1.4}
+.v13AiMsg.user{background:var(--panel2)}
+.v13AiMsg.assistant{background:rgba(40,211,157,.05)}
+.v13AiHistoryTitle{font-size:11px;color:var(--muted);font-weight:800;margin-top:8px}
 @media(max-width:700px){.v13AiFab{right:12px;bottom:12px}.v13AiPanel{right:10px;bottom:66px;max-height:78vh}}
 
 </style>
@@ -660,7 +665,7 @@ dialog::backdrop{background:rgba(0,0,0,.72);backdrop-filter:blur(4px)}
 <main class="main"><div class="mobileBrand click" onclick="go('home')"><div class="mark">CP</div><b>ClientPro</b></div>
 <div class="top"><div><small id="crumb" class="mut">ClientPro</small><h1 id="title">Dashboard</h1></div><input class="topSearch" placeholder="Cerca clienti, progetti, attività..."><div class="actions">
 <button id="installBtn" class="installBtn" title="Installa ClientPro" onclick="installApp()">↓ <span class="accountText">Installa</span></button>
-<span class="betaBadge" title="Versione installata">v13.1</span>
+<span class="betaBadge" title="Versione installata">v13.1.1</span>
 <button class="accountBtn" title="Account e impostazioni" onclick="openAccountSettings()"><span class="avatar" id="accountAvatar">CP</span><span class="accountText" id="accountLabel">Account</span></button>
 <button class="primary" onclick="newClient()">＋ Nuovo cliente</button>
 </div></div><div id="offlineBanner" class="offlineBanner"></div><div id="view"></div></main>
@@ -683,7 +688,7 @@ let deferredInstallPrompt=null;
 let activeView='section';
 let lastSyncAt=null;
 let localDirty=false;
-const APP_VERSION='13.1';
+const APP_VERSION='13.1.1';
 
 function syncTimeText(){
   return lastSyncAt ? 'Ultima sincronizzazione: '+lastSyncAt.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'}) : 'Sincronizzazione non ancora completata';
@@ -914,6 +919,9 @@ let v13SaveTimer=null;
 let v13AiMode='tutor';
 let v13AiLast=null;
 let v13AiBusy=false;
+let v13AiThreadId=null;
+let v13AiHistory=[];
+let v13AiSuggestionId=null;
 const save=()=>{localDirty=true;localStorage.setItem(STORE,JSON.stringify(db));scheduleCloudSave()};
 const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
 
@@ -1811,7 +1819,7 @@ async function loadProblemWorkspace(problemId,section='overview',push=true){
   if(error||!data){console.error(error);alert('Problema V13 non disponibile.');return}
   const client=db.clients.find(x=>x.id===data.client_ref);if(client)cur=client;
   if(v13LegacyIndex==null&&client){v13LegacyIndex=(client.problems||[]).findIndex((p,i)=>v13LegacyRef(client.id,i)===data.legacy_problem_ref)}
-  v13Problem=data;v13Section=section;activeView='problemWorkspace';activate('');
+  v13Problem=data;v13Section=section;v13AiThreadId=null;v13AiHistory=[];v13AiLast=null;v13AiSuggestionId=null;activeView='problemWorkspace';activate('');
   crumb.textContent='Clienti / Problemi / Workspace';title.textContent=data.title;
   await renderProblemWorkspace();syncTimeContext();window.scrollTo(0,0);
   if(push)pushRoute({view:'problemWorkspace',clientId:data.client_ref,legacyIndex:v13LegacyIndex,problemId:data.id,section});
@@ -1882,14 +1890,88 @@ async function renderProblemWorkspace(){
 
 
 function v13AiShell(){
-  return '<button class="v13AiFab" onclick="toggleV13Ai()">✦ AI ClientPro</button><div id="v13AiPanel" class="v13AiPanel hide"><div class=v13AiHead><div><b>AI ClientPro</b><div class=mut style="font-size:12px">'+(v13AiMode==='tutor'?'Tutor · ti guida':'Tecnica · propone soluzioni')+'</div></div><button onclick="toggleV13Ai()">✕</button></div><div class=v13AiModes><button id=aiModeTutor class="'+(v13AiMode==='tutor'?'on':'')+'" onclick="setV13AiMode(\'tutor\')">AI Tutor</button><button id=aiModeTech class="'+(v13AiMode==='technical'?'on':'')+'" onclick="setV13AiMode(\'technical\')">AI Tecnica</button></div><div class=v13AiQuick>'+v13AiQuickButtons()+'</div><label>Cosa vuoi chiedere?</label><textarea id=v13AiPrompt placeholder="Es. Analizza questo problema e dimmi cosa manca."></textarea><div class=v13Actions><button class=primary onclick="runV13Ai(\'custom\')">Chiedi all’AI</button><button onclick="runV13Ai(\'analyze\')">Analizza problema</button></div><div id=v13AiContext class=v13AiContext>Contesto: problema corrente + dati delle sue sezioni. I segreti non vengono inclusi.</div><div id=v13AiResult style="margin-top:10px"></div></div>'
+  return '<button class="v13AiFab" onclick="toggleV13Ai()">✦ AI ClientPro</button><div id="v13AiPanel" class="v13AiPanel hide"><div class=v13AiHead><div><b>AI ClientPro</b><div class=mut style="font-size:12px">'+(v13AiMode==='tutor'?'Tutor · ti guida':'Tecnica · propone soluzioni')+'</div></div><button onclick="toggleV13Ai()">✕</button></div><div class=v13AiModes><button id=aiModeTutor class="'+(v13AiMode==='tutor'?'on':'')+'" onclick="setV13AiMode(\'tutor\')">AI Tutor</button><button id=aiModeTech class="'+(v13AiMode==='technical'?'on':'')+'" onclick="setV13AiMode(\'technical\')">AI Tecnica</button></div><div class=v13AiQuick>'+v13AiQuickButtons()+'</div><label>Cosa vuoi chiedere?</label><textarea id=v13AiPrompt placeholder="Es. Analizza questo problema e dimmi cosa manca."></textarea><div class=v13Actions><button class=primary onclick="runV13Ai(\'custom\')">Chiedi all’AI</button><button onclick="runV13Ai(\'analyze\')">Analizza problema</button></div><div id=v13AiContext class=v13AiContext>Contesto: problema corrente + dati delle sue sezioni. I segreti non vengono inclusi.</div><div class=v13AiHistoryTitle>Cronologia di questa modalità</div><div id=v13AiHistory class=v13AiHistory></div><div id=v13AiResult style="margin-top:10px"></div></div>'
 }
 function v13AiQuickButtons(){
   if(v13AiMode==='tutor')return '<button onclick="runV13Ai(\'analyze\')">Cosa manca?</button><button onclick="runV13Ai(\'custom\',\'Spiegami il prossimo passo in modo semplice\')">Prossimo passo</button>'
   return '<button onclick="runV13Ai(\'causes\')">Proponi cause</button><button onclick="runV13Ai(\'questions\')">Genera domande</button><button onclick="runV13Ai(\'solutions\')">Proponi soluzioni</button><button onclick="runV13Ai(\'requirements\')">Genera requisiti</button><button onclick="runV13Ai(\'design\')">Progetta</button><button onclick="runV13Ai(\'flow\')">Crea flow</button><button onclick="runV13Ai(\'tests\')">Genera test</button>'
 }
-function toggleV13Ai(){const p=document.getElementById('v13AiPanel');if(p)p.classList.toggle('hide')}
-function setV13AiMode(mode){v13AiMode=mode;const p=document.getElementById('v13AiPanel');if(p){const open=!p.classList.contains('hide');p.outerHTML=v13AiShell().match(/<div id="v13AiPanel"[\s\S]*<\/div>$/)?.[0]||p.outerHTML;if(open)document.getElementById('v13AiPanel')?.classList.remove('hide')}}
+function v13AiActionText(action,prompt=''){
+  if(prompt)return prompt;
+  return ({analyze:'Analizza il problema',causes:'Proponi possibili cause',questions:'Genera domande utili',solutions:'Proponi soluzioni',requirements:'Genera requisiti',design:'Progetta la soluzione',flow:'Crea il flow',tests:'Genera test',custom:'Richiesta libera'})[action]||action;
+}
+function v13AiRenderHistory(){
+  const box=document.getElementById('v13AiHistory');if(!box)return;
+  if(!v13AiHistory.length){box.innerHTML='<div class=mut style="font-size:11px">Nessun messaggio ancora.</div>';return}
+  box.innerHTML=v13AiHistory.slice(-10).map(m=>'<div class="v13AiMsg '+(m.role==='assistant'?'assistant':'user')+'"><b>'+(m.role==='assistant'?'AI':'Tu')+'</b><br>'+esc(m.content||'')+'</div>').join('');
+  box.scrollTop=box.scrollHeight;
+}
+async function ensureV13AiThread(){
+  if(!v13Problem||!workspaceId)return null;
+  if(v13AiThreadId){
+    const {data}=await SB.from('cp_ai_threads').select('id').eq('id',v13AiThreadId).maybeSingle();
+    if(data?.id)return v13AiThreadId;
+    v13AiThreadId=null;
+  }
+  let q=await SB.from('cp_ai_threads').select('*').eq('problem_id',v13Problem.id).eq('mode',v13AiMode).maybeSingle();
+  if(q.error){console.error(q.error);return null}
+  if(q.data?.id){v13AiThreadId=q.data.id;return v13AiThreadId}
+  const ins=await SB.from('cp_ai_threads').insert({
+    workspace_id:workspaceId,client_ref:v13Problem.client_ref,problem_id:v13Problem.id,
+    mode:v13AiMode,title:v13AiMode==='tutor'?'AI Tutor':'AI Tecnica'
+  }).select().single();
+  if(ins.error){console.error(ins.error);return null}
+  v13AiThreadId=ins.data.id;return v13AiThreadId;
+}
+async function loadV13AiHistory(){
+  v13AiThreadId=null;
+  const threadId=await ensureV13AiThread();
+  if(!threadId){v13AiHistory=[];v13AiRenderHistory();return}
+  const {data,error}=await SB.from('cp_ai_messages').select('id,role,content,model,status,created_at').eq('thread_id',threadId).order('created_at',{ascending:false}).limit(10);
+  if(error){console.error(error);v13AiHistory=[]}else v13AiHistory=(data||[]).reverse().map(x=>({role:x.role,content:x.content,id:x.id}));
+  v13AiRenderHistory();
+}
+async function saveV13AiMessage(role,content,model=null,status='completed'){
+  const threadId=await ensureV13AiThread();if(!threadId||!content)return null;
+  const {data,error}=await SB.from('cp_ai_messages').insert({
+    workspace_id:workspaceId,client_ref:v13Problem.client_ref,problem_id:v13Problem.id,
+    thread_id:threadId,role,content,model,status
+  }).select().single();
+  if(error){console.error(error);return null}
+  v13AiHistory.push({role,content,id:data.id});v13AiHistory=v13AiHistory.slice(-10);v13AiRenderHistory();
+  return data;
+}
+function v13AiSuggestionTarget(target){
+  return ({causes:'cause',questions:'question',solutions:'solution',requirements:'requirement',design:'design',flow:'flow',tests:'test'})[target]||null;
+}
+async function saveV13AiSuggestion(proposal,messageId){
+  const target=v13AiSuggestionTarget(proposal?.target);
+  if(!target||!Array.isArray(proposal?.items)||!proposal.items.length)return null;
+  const {data,error}=await SB.from('cp_ai_suggestions').insert({
+    workspace_id:workspaceId,client_ref:v13Problem.client_ref,problem_id:v13Problem.id,
+    message_id:messageId||null,target_type:target,
+    title:'Proposta AI · '+v13PhaseLabel(proposal.target==='causes'?'causes':proposal.target==='questions'?'questions':proposal.target==='solutions'?'solutions':proposal.target),
+    description:proposal.items.length+' elementi proposti',payload:proposal,status:'pending'
+  }).select().single();
+  if(error){console.error(error);return null}
+  return data;
+}
+function toggleV13Ai(){
+  const p=document.getElementById('v13AiPanel');if(!p)return;
+  const opening=p.classList.contains('hide');p.classList.toggle('hide');
+  if(opening)loadV13AiHistory();
+}
+function setV13AiMode(mode){
+  const prompt=document.getElementById('v13AiPrompt')?.value||'';
+  const p=document.getElementById('v13AiPanel');const open=p?!p.classList.contains('hide'):false;
+  v13AiMode=mode;v13AiThreadId=null;v13AiHistory=[];v13AiLast=null;v13AiSuggestionId=null;
+  if(p){
+    const shell=v13AiShell(),m=shell.match(/<div id="v13AiPanel"[\s\S]*<\/div>$/);
+    if(m)p.outerHTML=m[0];
+  }
+  const np=document.getElementById('v13AiPrompt');if(np)np.value=prompt;
+  if(open){document.getElementById('v13AiPanel')?.classList.remove('hide');loadV13AiHistory()}
+}
 function v13AiRenderResult(data){
   const box=document.getElementById('v13AiResult');if(!box)return;v13AiLast=data;
   let h='<div class=v13AiAnswer>'+esc(data.answer||'Nessuna risposta.')+'</div>';
@@ -1898,16 +1980,44 @@ function v13AiRenderResult(data){
   box.innerHTML=h;
 }
 async function runV13Ai(action='custom',forcedPrompt=''){
-  if(v13AiBusy||!v13Problem)return;const panel=document.getElementById('v13AiPanel');if(panel)panel.classList.add('v13AiBusy');v13AiBusy=true;
+  if(v13AiBusy||!v13Problem)return;
+  const panel=document.getElementById('v13AiPanel');if(panel)panel.classList.add('v13AiBusy');v13AiBusy=true;
   const out=document.getElementById('v13AiResult');if(out)out.innerHTML='<div class=v13Note>AI ClientPro sta lavorando…</div>';
   const prompt=forcedPrompt||document.getElementById('v13AiPrompt')?.value||'';
+  const userText=v13AiActionText(action,prompt);
   try{
-    const {data,error}=await SB.functions.invoke('clientpro-ai',{body:{problemId:v13Problem.id,mode:v13AiMode,action,prompt}});
-    if(error)throw error;if(data?.error)throw new Error(data.error);v13AiRenderResult(data||{});
-  }catch(e){console.error(e);if(out)out.innerHTML='<div class=v13Note><b>AI non disponibile.</b><br>'+esc(e?.message||'Controlla la configurazione server dell’AI.')+'</div>'}
+    await ensureV13AiThread();
+    if(!v13AiHistory.length)await loadV13AiHistory();
+    const historyForAi=v13AiHistory.map(x=>({role:x.role,content:x.content}));
+    const userMsg=await saveV13AiMessage('user',userText);
+    const {data,error}=await SB.functions.invoke('clientpro-ai',{body:{problemId:v13Problem.id,mode:v13AiMode,action,prompt,history:historyForAi}});
+    if(error){
+      const msg=error?.context?.body?.error||error?.message||'Errore nella chiamata AI.';
+      throw new Error(msg);
+    }
+    if(data?.error)throw new Error(data.error);
+    const assistantText=(data?.answer||'')+(data?.next_step?'\nProssimo passo: '+data.next_step:'');
+    const assistantMsg=await saveV13AiMessage('assistant',assistantText,data?.model||null);
+    v13AiSuggestionId=null;
+    if(data?.proposal){
+      const sug=await saveV13AiSuggestion(data.proposal,assistantMsg?.id||null);
+      v13AiSuggestionId=sug?.id||null;
+    }
+    v13AiRenderResult(data||{});
+  }catch(e){
+    console.error(e);
+    await saveV13AiMessage('assistant','Errore temporaneo: '+(e?.message||'AI non disponibile.'),null,'error');
+    if(out)out.innerHTML='<div class=v13Note><b>AI temporaneamente non disponibile.</b><br>'+esc(e?.message||'Riprova tra poco. Il tuo lavoro resta salvato.')+'</div>'
+  }
   finally{v13AiBusy=false;if(panel)panel.classList.remove('v13AiBusy')}
 }
-function discardV13AiProposal(){v13AiLast=null;const box=document.getElementById('v13AiResult');if(box)box.innerHTML='<div class=v13Note>Proposta scartata. Nessuna modifica salvata.</div>'}
+async function discardV13AiProposal(){
+  if(v13AiSuggestionId){
+    await SB.from('cp_ai_suggestions').update({status:'rejected'}).eq('id',v13AiSuggestionId);
+  }
+  v13AiLast=null;v13AiSuggestionId=null;
+  const box=document.getElementById('v13AiResult');if(box)box.innerHTML='<div class=v13Note>Proposta scartata. Nessuna modifica salvata.</div>'
+}
 async function approveV13AiProposal(){
   const proposal=v13AiLast?.proposal;if(!proposal||!Array.isArray(proposal.items)||!proposal.items.length)return;
   const base={workspace_id:workspaceId,client_ref:v13Problem.client_ref,problem_id:v13Problem.id};
@@ -1916,12 +2026,15 @@ async function approveV13AiProposal(){
   else if(proposal.target==='questions'){table='cp_problem_questions';rows=proposal.items.map(x=>({...base,question:x.question||'Domanda proposta',why_needed:x.why_needed||'',status:'open'}))}
   else if(proposal.target==='solutions'){table='cp_solutions';rows=proposal.items.map(x=>({...base,name:x.name||'Soluzione proposta',description:x.description||'',advantages:Array.isArray(x.advantages)?x.advantages:[],disadvantages:Array.isArray(x.disadvantages)?x.disadvantages:[],difficulty:['low','medium','high'].includes(x.difficulty)?x.difficulty:'medium',estimated_cost:x.estimated_cost??null,estimated_hours:x.estimated_hours??null,status:'candidate'}))}
   else if(proposal.target==='requirements'){table='cp_requirements';rows=proposal.items.map(x=>({...base,title:x.title||'Requisito',description:x.description||'',requirement_type:['functional','non_functional','constraint'].includes(x.requirement_type)?x.requirement_type:'functional',priority:['low','medium','high','critical'].includes(x.priority)?x.priority:'medium',mandatory:x.mandatory!==false,status:'draft'}))}
-  else if(proposal.target==='design'){table='cp_design_items';rows=proposal.items.map(x=>({...base,item_type:x.item_type||'note',title:x.title||'Elemento di progetto',content:x.content||''}))}
+  else if(proposal.target==='design'){table='cp_design_items';rows=proposal.items.map(x=>{const map={component:'architecture',data:'database',note:'other'};const allowed=['architecture','database','roles','permissions','api','integration','interface','other'];const type=map[x.item_type]||x.item_type;return {...base,item_type:allowed.includes(type)?type:'other',title:x.title||'Elemento di progetto',content:x.content||''}})}
   else if(proposal.target==='flow'){table='cp_flow_items';rows=proposal.items.map((x,i)=>({...base,code:'FLOW-'+Date.now()+'-'+(i+1),title:x.title||'Flusso',description:x.description||'',pseudocode:x.pseudocode||'',rules:Array.isArray(x.rules)?x.rules:[],version:1,is_current:true}))}
   else if(proposal.target==='tests'){table='cp_problem_tests';rows=proposal.items.map((x,i)=>({...base,code:'TEST-'+Date.now()+'-'+(i+1),title:x.title||'Test',conditions:x.conditions||'',steps:Array.isArray(x.steps)?x.steps:[],expected_result:x.expected_result||'',status:'not_run'}))}
   if(!table||!rows.length){alert('Questa proposta non può essere salvata automaticamente.');return}
-  const {error}=await SB.from(table).insert(rows);if(error){console.error(error);alert('Errore nel salvataggio della proposta AI.');return}
-  v13AiLast=null;await renderProblemWorkspace();const p=document.getElementById('v13AiPanel');if(p)p.classList.remove('hide');
+  const {data:created,error}=await SB.from(table).insert(rows).select('id');if(error){console.error(error);alert('Errore nel salvataggio della proposta AI: '+(error.message||'controlla i dati proposti.'));return}
+  if(v13AiSuggestionId){
+    await SB.from('cp_ai_suggestions').update({status:'approved',approved_at:new Date().toISOString(),approved_by:authUser?.id||null,resulting_record_id:created?.[0]?.id||null}).eq('id',v13AiSuggestionId);
+  }
+  v13AiLast=null;v13AiSuggestionId=null;await renderProblemWorkspace();const p=document.getElementById('v13AiPanel');if(p){p.classList.remove('hide');await loadV13AiHistory()}
 }
 
 async function renderV13Overview(){
@@ -2031,7 +2144,7 @@ async function markV13ProblemResolved(){if(!confirm('Confermi che questo problem
 
 async function renderV13Files(){
   const rows=await v13Fetch('cp_problem_files');
-  return '<div class=card><div class="row between"><div><h3>File e riferimenti</h3><div class=mut>In V13.0 puoi registrare link e riferimenti. Il caricamento file completo arriverà con l’archivio versionato.</div></div><button class=primary onclick="newV13FileRef()">＋ Aggiungi riferimento</button></div><div class=v13List style="margin-top:12px">'+(rows.length?rows.map(x=>'<div class=item><div class="row between"><div><b>'+esc(x.file_name)+'</b><div class=mut>'+esc(x.description||'')+'</div></div><button onclick="deleteV13Item(\'cp_problem_files\',\''+x.id+'\')">Elimina</button></div>'+(x.external_url?'<p><a class=v13Link href="'+esc(x.external_url)+'" target=_blank rel=noopener>Apri riferimento</a></p>':'')+'</div>').join(''):'<div class=empty>Nessun riferimento.</div>')+'</div></div>';
+  return '<div class=card><div class="row between"><div><h3>File e riferimenti</h3><div class=mut>Puoi registrare link e riferimenti. Il caricamento file completo arriverà con l’archivio versionato.</div></div><button class=primary onclick="newV13FileRef()">＋ Aggiungi riferimento</button></div><div class=v13List style="margin-top:12px">'+(rows.length?rows.map(x=>'<div class=item><div class="row between"><div><b>'+esc(x.file_name)+'</b><div class=mut>'+esc(x.description||'')+'</div></div><button onclick="deleteV13Item(\'cp_problem_files\',\''+x.id+'\')">Elimina</button></div>'+(x.external_url?'<p><a class=v13Link href="'+esc(x.external_url)+'" target=_blank rel=noopener>Apri riferimento</a></p>':'')+'</div>').join(''):'<div class=empty>Nessun riferimento.</div>')+'</div></div>';
 }
 function newV13FileRef(){show('<h2>Nuovo riferimento</h2><label>Nome *</label><input id=v13_file_name><label>URL</label><input id=v13_file_url placeholder="https://..."><label>Descrizione</label><textarea id=v13_file_desc></textarea><button class=primary onclick="saveV13FileRef()">Aggiungi</button>')}
 async function saveV13FileRef(){if(!v13_file_name.value.trim())return;const {error}=await SB.from('cp_problem_files').insert({workspace_id:workspaceId,client_ref:v13Problem.client_ref,problem_id:v13Problem.id,file_name:v13_file_name.value,external_url:v13_file_url.value||null,description:v13_file_desc.value});if(error){console.error(error);alert('Errore nel salvataggio.');return}modal.close();await renderProblemWorkspace()}
